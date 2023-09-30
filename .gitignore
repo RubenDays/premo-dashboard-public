@@ -1,0 +1,19 @@
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# intellij
+.idea/
+
+# other files
+.env
+
+# my stuff
+/Logic/logs
+/Logic/input
+logs/
+input/
+
+/docker/letsencrypt
+/Presentation/dashboard/nginx.conf
