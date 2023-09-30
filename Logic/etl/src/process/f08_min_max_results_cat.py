@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import sqlalchemy.exc
 
 from src.utils.getters import get_columns_from_table
 from src.utils import global_vars
@@ -21,6 +22,9 @@ class MinMaxResultsCat:
     def __log_error(self, msg: str):
         self.__logger.error(f'[{self.__prefix}] {msg}')
 
+    def __get_params_merged(self, query, conn):
+        return pd.read_sql_query(f'select ID_MERGED, NM_ANALISE, NM_PARAMETRO from {global_vars.V_PARAMS_MERGED} where {query}', conn)
+
     def run(self):
         self.__log_info('Starting execution...')
         self.__log_info(f'Extracting rules from "max-min-cat.json"...')
@@ -37,8 +41,19 @@ class MinMaxResultsCat:
         # Extracts the parameters that will be categorized
         self.__log_info(f'Extrating parameters to categorize...')
         with self.__engine.begin() as conn:
-            df_params = pd.read_sql_query(
-                f'select ID_MERGED, NM_ANALISE, NM_PARAMETRO from v_param_merged where {where_query}', conn)
+            try:
+                df_params = self.__get_params_merged(where_query, conn)
+            except sqlalchemy.exc.ProgrammingError as e:
+                code, error = e.orig.args
+                if code == 1146:
+                    self.__log_info(f'View {global_vars.V_PARAMS_MERGED} does not exists. Creating and retrying...')
+                    conn.execute(f'create view {global_vars.V_PARAMS_MERGED} as '
+                                 'select ID_MERGED, NM_ANALISE, NM_PARAMETRO, UNIDADES '
+                                 'from ('
+                                 f'select ID_PARAMETRO, ID_MERGED from {global_vars.TBL_MERGED_IDS_PARAMS} group by ID_MERGED) as t0 join ('
+                                 f'select ID_PARAMETRO, NM_ANALISE, NM_PARAMETRO, UNIDADES from {global_vars.TBL_PARAMETRO}) as t1 '
+                                 'on t0.ID_PARAMETRO = t1.ID_PARAMETRO')
+                    df_params = self.__get_params_merged(where_query, conn)
 
         # Gets the names of the columns of the patient data
         self.__log_info(f'Extracting columns from {global_vars.V_PATIENT_DATA}...')

@@ -1,5 +1,3 @@
-use premodb
-
 insert into PAIS values
 (1, 'Portugal'),
 (2, 'África'),

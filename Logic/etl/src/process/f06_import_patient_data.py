@@ -203,6 +203,7 @@ class ImportPatientData:
     def __get_patient_data_file(self):
 
         def is_patient_data_file(f):
-            return f.split('/')[0] == 'patient_data'
+            f_parts = f.split('/')
+            return f_parts[0] == 'patient_data' and len(f_parts) == 2 and len(f_parts[1]) > 0
 
         return [f for f in self.__data.namelist() if is_patient_data_file(f)]

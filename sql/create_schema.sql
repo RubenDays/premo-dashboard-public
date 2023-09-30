@@ -1,5 +1,3 @@
-use premodb;
-
 drop table if exists COMORBIDADE;
 drop table if exists ECMO;
 drop table if exists VMI;

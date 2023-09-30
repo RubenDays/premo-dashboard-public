@@ -31,7 +31,10 @@ class ImportLabData:
 
     # Auxiliary functions
     def __get_patient_id(self, fn):
-        return int(os.path.basename(fn.split('.')[0]))
+        try:
+            return int(os.path.basename(fn.split('.')[0]))
+        except:
+            return None
 
     def __import_patient(self, file, index=0):
         try:
@@ -205,6 +208,20 @@ class ImportLabData:
                 df.reindex(sorted(df.columns), axis=1).to_sql(nome, con=engine, if_exists='append',
                                                               index=True)  # , index_label=[COL_PACIENTE, COL_COLHEITA])
 
+    def __check_and_create_colheita_tbl(self, conn):
+        try:
+            pd.read_sql_query(
+                f"SELECT `{COL_PACIENTE}` "
+                f"FROM `{TBL_COLHEITA}` "
+                f"limit1 ;",
+                con=conn)
+        except sqlalchemy.exc.ProgrammingError as e:
+            code, error = e.orig.args
+            if code == 1146:    # table does not exist
+                conn.execute(f'create table COLHEITA ({COL_PACIENTE} int, {COL_COLHEITA} datetime, SERVICO_REQ text, '
+                             f'primary key({COL_PACIENTE}, {COL_COLHEITA})'
+                             f');')
+
     def run(self) -> int:
         self.__log_info('Starting execution...')
         # establish connection to DB
@@ -212,6 +229,7 @@ class ImportLabData:
         with self.__engine.begin() as conn:
             # get existing params
             params = self.__get_existing_parameters(conn)
+            self.__check_and_create_colheita_tbl(conn)
 
         # get the lab data files (only)
         filenames = self.__get_lab_data_files()
@@ -224,6 +242,10 @@ class ImportLabData:
             self.__log_info(f'Processing file {idx + 1} of {num_files}...')
 
             patient_id = self.__get_patient_id(filename)
+            if patient_id is None:
+                self.__log_info(f'File {filename} is not valid. Ignoring...')
+                continue
+
             file_bytes = self.__data.read(filename)
 
             patient_data = self.__monitor_time(lambda: self.__import_patient(file_bytes),
