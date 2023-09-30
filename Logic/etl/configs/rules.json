@@ -1,0 +1,26 @@
+{
+	"hemograma|plaquetas": {
+		"transformations": [
+			{
+				"+": "avg"
+			}
+		],
+		"result": {
+			"type": "number",
+			"ifnot": "null"
+		}
+	},
+	"all": {
+		"transformations": [
+			{
+				"+": "avg",
+				"<": "ignore",
+				">": "ignore"
+			}
+		],
+		"result": {
+			"type": "number",
+			"ifnot": "null"
+		}
+	}
+}

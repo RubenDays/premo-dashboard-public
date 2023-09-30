@@ -1,0 +1,316 @@
+/* init page Cards */
+.init-card {
+    width: 10rem;
+    display: flex;
+    justify-content: center;
+}
+
+/* Pagination */
+.page-active {
+    --bs-pagination-active-bg: rgb(97, 0, 97);
+    --bs-pagination-active-border-color: rgb(125, 51, 168);
+}
+
+.page-inactive > a {
+    color: rgb(97, 0, 97);
+    --bs-pagination-focus-color: rgb(130, 0, 130);;
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(97, 20, 97, 0.555);
+}
+
+.page-inactive:hover > a {
+    --bs-pagination-hover-color: rgb(125, 51, 168);
+}
+
+/* Styles for the action buttons in user management */
+.fa-manage-user-icon {
+    color: rgba(70, 0, 70)
+}
+
+.fa-delete-user-icon {
+    color: rgba(164, 0, 33);
+    padding-left: 1rem;
+}
+
+.fa-manage-user-icon:hover {
+    font-size: 1.8em;
+    transition: 0.2s ease-out;
+    color: rgb(119, 49, 119);
+    cursor: pointer;
+}
+
+.fa-delete-user-icon:hover {
+    font-size: 1.8em;
+    transition: 0.2s ease-out;
+    color: rgb(204, 80, 80);
+    cursor: pointer;
+}
+
+/* reset padding and margin that boostrap adds */
+.plain-user-status {
+    padding: 0;
+    margin-bottom: 0;
+    width: 70%;
+}
+
+.th-user-status {
+    justify-content: center;
+    display: flex;
+}
+
+table, th, td {
+    text-align: center; /* center text for tables */
+}
+
+.plot {
+    padding-left: 0px; /* removes the padding made by plotly*/
+    width: 100%
+}
+
+.modal-dl {
+    max-width: 20rem;     /* size of the modal*/
+    margin-left: 45%; /* try to center it on the page */
+}
+
+/* Removes the padding that a div has by default, for the plots */
+.myplot-div {
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 0;
+}
+
+.spinner-div {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    display: flex;
+    padding-left: 50%;    
+}
+
+.plain-div {
+    width: 100%;
+    height: 100%;
+}
+
+.sidebar-user-title {
+    color: white;
+    font-size: 1.3em;
+}
+
+.sidebar-user-item {
+    padding-top: .25em;
+    padding-right: 0.3rem;
+    padding-left: 0.5em;
+    color: white;
+}
+
+.sidebar-item {
+    display: block;
+    transition: background-color .15s;
+    border-radius: 5px;
+}
+
+.sidebar-hr {
+    color: white;
+    background-color: white;
+    height: 0.1rem;
+    opacity: 0.6;
+    padding-left: 0;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255, 255, 255, .1);
+}
+
+.sidebar-title {
+    display: flex;
+    font-size: 1em;
+    color: white;
+    padding: 0.5rem 0rem;
+    justify-content: space-between;
+}
+
+.sidebar-title span i {
+    display: inline-block;
+    width: 1.5em;
+}
+
+.sidebar-title .toggle-btn {
+    margin: 0 0.5rem;
+    cursor: pointer;
+    transition: transform .3s;
+}
+
+.sidebar-item.open > .sidebar-title .toggle-btn {
+    transform: rotate(180deg);
+}
+
+.sidebar-content {
+    padding-top: .25em;
+    height: 0;
+    overflow: hidden;
+}
+
+.sidebar-item.open > .sidebar-content {
+    height: auto;
+}
+
+.sidebar-item.plain {
+    color: #fff;
+    text-decoration: none;
+}
+
+.sidebar-item.plain:hover {
+    text-decoration: underline;
+}
+
+.sidebar-item.plain i {
+    display: inline-block;
+    width: 1.7em;
+}
+
+
+.form-title {
+    font-size: 1.7rem;
+    width: 100%;
+}
+
+.centered-text-round-button {
+    height: 1.8rem;
+    width: 0.7rem;
+    justify-content: center;
+    align-items: center;
+    display: inline-flex;
+    margin-left: 5px;
+}
+
+.error-text {
+    color: #dc3545;
+    font-size: 0.875rem;
+    padding-left: 0.5rem;
+}
+
+.error-box {
+    border: 1px solid #dc3545;
+    border-radius: 5.4px;
+}
+
+.grph-ctrl {
+    width: 130px
+}
+
+.z0 {
+    z-index: 0;
+}
+
+.nb-link {
+    text-decoration: none;
+    color: white;
+}
+
+.nb-link:hover {
+    color: rgba(200, 200, 200);
+    transform: scale(1.2);
+}
+
+.nb-main {
+    position: fixed;
+    width: 100%;
+    background-color: rgba(70, 0, 70);
+    z-index: 100;
+    top: 0;
+    height: 56.25px;
+}
+
+.sb-main {
+    background-color: rgb(119, 49, 119);
+    min-height: 100vh !important;
+}
+
+.centered-btn-grp {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-generic {
+    --bs-btn-active-bg:  rgb(125, 51, 168);
+    background-color: rgb(97, 0, 97);
+    color: white;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: rgba(97, 0, 97, 0.842);
+    --bs-btn-disabled-border-color: rgb(97, 0, 97);
+    --bs-btn-border-color: rgb(51, 1, 51);
+}
+
+.btn-generic:hover {
+    background-color: rgb(130, 0, 130);
+    color: white;
+}
+
+.sb-link {
+    text-decoration: none;
+    color: white;
+    padding-left: 0.5em;
+}
+
+.sb-link:hover {
+    color: rgba(200, 200, 200);
+}
+
+.sb-nav-item {
+    padding: 0.5rem 0rem;
+}
+
+.sidebar {
+    background-color: rgb(119, 49, 119);
+    position: fixed;
+    top: 56.25px;
+    bottom: 0;
+    left: 0;
+    display: block;
+    min-height: 100vh !important;
+    z-index: 101;
+    padding-top: 0 0 0;
+}
+
+#sidebar-wrapper{
+    margin-left: -1rem;
+    -webkit-transition: margin .25s ease-out;
+    -moz-transition: margin .25s ease-out;
+    -o-transition: margin .25s ease-out;
+    transition: margin .25s ease-out;
+}
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+}
+
+#page-content-wrapper {
+    min-width: 0;
+    padding-left: 13.5rem;
+    top: 56.25px;
+    width: 100%;
+}
+
+.form-check-input:checked {
+    background-color:rgb(119, 49, 119);
+}
+
+.ctn-visualize {
+    margin-left: 0;
+    margin-right: 0;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+}
+
+.form-visualize {
+    align-items: 'center';
+    justify-content: 'left';
+    display:'flex';
+    padding-left: 1.5rem;
+    width: 20%;
+}
+
+.plot-visualize {
+    width: 80%;
+}

@@ -1,0 +1,6 @@
+pwd:
+    secret_key: "changethis"
+    algorithm: "HS256"
+    access_token_expire_mins: 30
+    refresh_token_expire_mins: 31
+    default_password: 'changethis'

@@ -1,0 +1,43 @@
+Alanina aminotransferase (ALT)|Alanina aminotransferase (ALT)
+Antitrombina|Antitrombina
+APTT (T. Tromb. Parcial Activada)|Razao
+Aspartato aminotransferase (AST)|Aspartato aminotransferase (AST)
+Bilirrubina directa|Bilirrubina directa
+Bilirrubina total|Bilirrubina total
+Calcio|Calcio
+Cortisol serico|Cortisol serico
+Creatinacinase (CK)|Creatinacinase (CK)
+Creatinina|Creatinina
+DDimero|DDimero
+D-Dimeros|D-Dimeros
+Desidrogenase lactica (LDH)|Desidrogenase lactica (LDH)
+Ferritina|Ferritina
+Fibrinogenio|Fibrinogenio
+Fosfatase alcalina|Fosfatase alcalina
+Gama-glutamiltransferase (GGT)|Gama-glutamiltransferase (GGT)
+Gasimetria (Serviços)|Lac
+Gasimetria (Serviços)|pCO2
+Gasimetria (Serviços)|pH
+Gasimetria (Serviços)|pO2
+Glucose|Glucose
+Hemograma|Eosinofilos #
+Hemograma|Eritrocitos
+Hemograma|Hematocrito
+Hemograma|Hemoglobina
+Hemograma|Leucocitos
+Hemograma|Linfocitos #
+Hemograma|Neutrofilos #
+Hemograma|Plaquetas
+Ionograma|Cloro
+Ionograma|Potassio
+Ionograma|Sodio
+Mioglobina|Mioglobina
+NT- proBNP|NT- proBNP
+Procalcitonina|Procalcitonina
+Proteina C reactiva (PCR)|Proteina C reactiva (PCR)
+Proteínas totais|Proteínas totais
+Tempo de Protrombina ( I N R )|INR
+Tempo de Tromboplastina Parcial Activada (APTT)|Razao
+TP (Tempo de Protrombina)|INR:
+Troponina I|Troponina I (alta sensibilidade)
+Ureia|Ureia

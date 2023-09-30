@@ -1,0 +1,128 @@
+version: "3.4"
+
+name: dashboard-premo
+services:
+
+  traefik:
+    image: "traefik:v2.6"
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      #- "--entrypoints.websecure.address=:443"
+      #- "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      #- "--certificatesresolvers.myresolver.acme.email=${CERT_EMAIL}"
+      #- "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      #- "--certificatesResolvers.myresolver.acme.tlsChallenge=true"
+      #- "--certificatesResolvers.myresolver.acme.httpChallenge=true"
+      #- "--certificatesResolvers.myresolver.acme.httpChallenge.entryPoint=web"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+    #  - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    #labels:
+      # Redirect all HTTP to HTTPS permanently
+      #- traefik.http.routers.http_catchall.rule=HostRegexp(`{any:.+}`)
+      #- traefik.http.routers.http_catchall.entrypoints=web
+      #- traefik.http.routers.http_catchall.middlewares=https_redirect
+      #- traefik.http.middlewares.https_redirect.redirectscheme.scheme=https
+      #- traefik.http.middlewares.https_redirect.redirectscheme.permanent=true
+
+      # Adding in secure headers
+      #- traefik.http.middlewares.securedheaders.headers.forcestsheader=true
+      #- traefik.http.middlewares.securedheaders.headers.sslRedirect=true
+      #- traefik.http.middlewares.securedheaders.headers.STSPreload=true
+      #- traefik.http.middlewares.securedheaders.headers.ContentTypeNosniff=true
+      #- traefik.http.middlewares.securedheaders.headers.BrowserXssFilter=true
+      #- traefik.http.middlewares.securedheaders.headers.STSIncludeSubdomains=true
+      #- traefik.http.middlewares.securedheaders.headers.STSSeconds=315360000
+      #- traefik.http.middlewares.securedheaders.headers.frameDeny=true
+
+  ui:
+    image: dashboard-premo-ui
+    restart: always
+    labels:
+      - "traefik.enable=true"
+
+      # All traffic to premo.isel.priv goes to this container (ui)
+      - "traefik.http.routers.ui.rule=Host(`${DOMAIN}`)"
+
+      - "traefik.http.routers.ui.entrypoints=web"
+      #- "traefik.http.routers.ui.tls.certresolver=myresolver"
+    build:
+      context: ../Presentation/dashboard
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+
+  api:
+    image: dashboard-premo-api
+    restart: always
+    build:
+      context: ../Logic/Api
+      dockerfile: ./Dockerfile
+    env_file:
+      - ../Logic/Api/.env
+    depends_on:
+      - rabbitmq
+    labels:
+      - "traefik.enable=true"
+      # All traffic to domain/api goes to this container (api)
+      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+
+      - "traefik.http.routers.api.entrypoints=web"
+      #- "traefik.http.routers.api.tls.certresolver=myresolver"
+
+      # remove the /api before forwarding request to api
+      - "traefik.http.middlewares.strip-api.stripprefix.prefixes=/api"
+      - "traefik.http.routers.api.middlewares=strip-api@docker"
+      
+      # doesn't put trailling '/'
+      - "traefik.http.middlewares.api-strip.stripprefix.forceslash=false"
+
+  etl:
+    image: dashboard-premo-etl
+    restart: always
+    build:
+      context: ../Logic/etl
+      dockerfile: ./Dockerfile
+    env_file:
+      - ../Logic/etl/.env
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    restart: always
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - '27017:27017'
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${ME_CONFIG_MONGODB_ADMINUSERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${ME_CONFIG_MONGODB_ADMINPASSWORD}
+      ME_CONFIG_MONGODB_URL: ${ME_CONFIG_MONGODB_URL}
