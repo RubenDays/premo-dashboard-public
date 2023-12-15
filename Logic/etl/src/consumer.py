@@ -21,6 +21,7 @@ from src.process.f01_0_create_filtered_view import CreateFilteredView
 from src.process.f02_categorize_values import CategorizeValues
 from src.process.f03_create_merged_params import CreateMergedParams
 from src.process.f08_min_max_results_cat import MinMaxResultsCat
+from src.process.f09_import_therapy import ImportTherapy
 
 
 def process(archive: ZipFile):
@@ -78,6 +79,11 @@ def process(archive: ZipFile):
     min_max_results_cat = MinMaxResultsCat(logger=LOGGER, engine=ENGINE)
     min_max_results_cat.run()
     del agreg_cat_values
+    
+    # run scrip 09 - import therapy data
+    import_therapy_data = ImportTherapy(logger=log, engine=engine, archive_data=archive)
+    import_therapy_data.run()
+    del import_therapy_data
 
 
 def on_receive_message(ch, method, properties, body):

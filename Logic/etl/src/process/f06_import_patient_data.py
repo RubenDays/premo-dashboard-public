@@ -1,7 +1,9 @@
 from zipfile import ZipFile
 import pandas as pd
+import sqlalchemy
 
 from src.utils import global_vars
+from src.utils import funcs
 
 
 class ImportPatientData:
@@ -63,15 +65,17 @@ class ImportPatientData:
         else:
             self.__log_info('Patient data is not present - skip import patient data.')
 
-        self.__log_info('Creating patient data view with results...')
+        self.__log_info('Creating patient data tables with results...')
         with self.__engine.begin() as conn:
-            # it's categorical view, but could be the numeric one. all that's needed are the columns.
-            df = pd.read_sql_query(f'select * from {global_vars.V_AGREG_CAT_VALUES} limit 1', conn)
+            # need the columns.
+            cat_df = pd.read_sql_query(f'select * from {global_vars.V_AGREG_CAT_VALUES} limit 1;', conn)
+            num_df = pd.read_sql_query(f'select * from {global_vars.V_AGREG_NUM_VALUES} limit 1;', conn)
 
-        agreg_cols = [str(col) for col in df.columns if str(col).isnumeric()]
+        drop_cols = ['ID_PACIENTE', 'DATA_COLHEITA']
+        cat_cols = cat_df.drop(drop_cols, axis=1).columns.values.tolist()
+        num_cols = num_df.drop(drop_cols, axis=1).columns.values.tolist()
 
-        with self.__engine.begin() as conn:
-            self.__create_patient_data_result_views(agreg_cols, conn)
+        self.__create_patient_data_result_tables(cat_cols, num_cols)
 
         self.__log_info('Execution completed.')
 
@@ -151,36 +155,46 @@ class ImportPatientData:
     #   cols -> list of column names that represent the parameters of the results. Each column must be in ``.
     #   from_view_name -> Name of the view which to agregate.
     #   create_view_name -> Name of the view to be created.
-    def __create_patient_data_result_view_aux(self, cols: list, from_view_name: str, create_view_name: str, conn):
+    def __create_patient_data_result_table_aux(self, cols: list, from_view_name: str, create_view_name: str, conn):
         # Basically consists in joining the data from v_patient_data and v_agreg_cat/num_values, so we get a longitudinal
         # table with results and patient info.
         # Also adds columns to check if at the time of DATA_COLHEITA the patient was using VMI or ECMO, also a column that
         # shows how many days, from the DATA_COLHEITA, until death.
-        query = f'create view {create_view_name} as ' \
-            f'select {global_vars.V_PATIENT_DATA}.*, datediff(DATA_ALTA_UCI, {global_vars.COL_COLHEITA}) as DIAS_ALTA_UCI, ' \
-                f'datediff(DATA_ALTA_HOSPITAL, {global_vars.COL_COLHEITA}) as DIAS_ALTA_HOSPITAL, ' \
-                f'case when {global_vars.COL_COLHEITA} between DATA_ADMISSAO_UCI and DATA_ALTA_UCI then (datediff({global_vars.COL_COLHEITA}, DATA_ADMISSAO_UCI) + 1) else null end as DIA_UCI, ' \
-                f'{global_vars.COL_COLHEITA}, ' \
-                f'case when ({global_vars.COL_COLHEITA} between `DATA_INICIO_VMI` and `DATA_FIM_VMI`) then 1 else 0 end as VMI, ' \
-                f'case when ({global_vars.COL_COLHEITA} between `DATA_INICIO_ECMO` and `DATA_FIM_ECMO`) then 1 else 0 end as ECMO, ' \
-                f'{", ".join(cols)} ' \
-            f'from {global_vars.V_PATIENT_DATA} join {from_view_name} ' \
+        query = f'select {global_vars.V_PATIENT_DATA}.*, datediff(DATA_ALTA_UCI, {global_vars.COL_COLHEITA}) as DIAS_ALTA_UCI, ' \
+                    f'datediff(DATA_ALTA_HOSPITAL, {global_vars.COL_COLHEITA}) as DIAS_ALTA_HOSPITAL, ' \
+                    f'case when {global_vars.COL_COLHEITA} between DATA_ADMISSAO_UCI and DATA_ALTA_UCI then (datediff({global_vars.COL_COLHEITA}, DATA_ADMISSAO_UCI) + 1) else null end as DIA_UCI, ' \
+                    f'{global_vars.COL_COLHEITA}, ' \
+                    f'case when ({global_vars.COL_COLHEITA} between `DATA_INICIO_VMI` and `DATA_FIM_VMI`) then 1 else 0 end as VMI, ' \
+                    f'case when ({global_vars.COL_COLHEITA} between `DATA_INICIO_ECMO` and `DATA_FIM_ECMO`) then 1 else 0 end as ECMO, ' \
+                    f'{", ".join(cols)} ' \
+                f'from {global_vars.V_PATIENT_DATA} join {from_view_name} ' \
                 f'on {global_vars.V_PATIENT_DATA}.{global_vars.COL_PACIENTE} = {from_view_name}.{global_vars.COL_PACIENTE} '
 
-        conn.execute(f'drop view if exists {create_view_name};')
-        conn.execute(query)
+        return pd.read_sql_query(query, conn)
 
     # Creates v_patient_data_result_cat and v_patient_data_result_num.
     # params:
     #   result_cols -> list of column names that represent the parameters of the results
     #   conn -> connection
-    def __create_patient_data_result_views(self, result_cols: list, conn):
-        cols = [f'`{col}`' for col in result_cols]
-        self.__log_info(f'Creating {global_vars.V_PATIENT_DATA_RESULT_CAT}...')
-        self.__create_patient_data_result_view_aux(cols, global_vars.V_AGREG_CAT_VALUES, global_vars.V_PATIENT_DATA_RESULT_CAT, conn)
+    def __create_patient_data_result_tables(self, cat_cols: list, num_cols: list):
+        cat_cols = [f'`{col}`' for col in cat_cols]
+        num_cols = [f'`{col}`' for col in num_cols]
 
-        self.__log_info(f'Creating {global_vars.V_PATIENT_DATA_RESULT_NUM}...')
-        self.__create_patient_data_result_view_aux(cols, global_vars.V_AGREG_NUM_VALUES, global_vars.V_PATIENT_DATA_RESULT_NUM, conn)
+        self.__log_info(f'Creating {global_vars.TBL_PATIENT_DATA_RESULT_CAT}...')
+        with self.__engine.begin() as conn:
+            df_cat = self.__create_patient_data_result_table_aux(cat_cols, global_vars.V_AGREG_CAT_VALUES, global_vars.TBL_PATIENT_DATA_RESULT_CAT, conn)
+            cat_types = self.__transform_tbl_big_ints_to_ints(df_cat)
+            
+            # df_cat.to_sql(global_vars.TBL_PATIENT_DATA_RESULT_CAT, conn, if_exists='replace', index=False)
+            funcs.write_to_db_batches(conn, df_cat, global_vars.TBL_PATIENT_DATA_RESULT_CAT, self.__logger, types=cat_types)
+
+            self.__log_info(f'Creating {global_vars.TBL_PATIENT_DATA_RESULT_NUM}...')
+            df_num = self.__create_patient_data_result_table_aux(num_cols, global_vars.V_AGREG_NUM_VALUES, global_vars.TBL_PATIENT_DATA_RESULT_NUM, conn)
+            num_types = self.__transform_tbl_big_ints_to_ints(df_cat)
+            # df_num.to_sql(global_vars.TBL_PATIENT_DATA_RESULT_NUM, conn, if_exists='replace', index=False)
+            
+            funcs.write_to_db_batches(conn, df_num, global_vars.TBL_PATIENT_DATA_RESULT_NUM, self.__logger, types=num_types)
+
 
     def __insert_processo(self, df_ins_processo, conn):
         df_keys = pd.read_sql_query(f'select ID_PACIENTE from {global_vars.TBL_PROCESSO};', conn)
@@ -207,3 +221,11 @@ class ImportPatientData:
             return f_parts[0] == 'patient_data' and len(f_parts) == 2 and len(f_parts[1]) > 0
 
         return [f for f in self.__data.namelist() if is_patient_data_file(f)]
+
+    def __transform_tbl_big_ints_to_ints(self, df):
+        types = {}
+        for col in df.columns.values.tolist():
+            if df[col].dtype == 'int64':
+                types[col] = sqlalchemy.INT
+        
+        return types

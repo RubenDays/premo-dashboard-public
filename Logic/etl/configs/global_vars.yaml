@@ -14,6 +14,13 @@ schema:
     tbl_cat_values: "filtered_cat_values"
     tbl_transformed_filtered_values: "transformed_filtered_values"
     tbl_patient_min_max_result: "patient_min_max_result"
+    tbl_long_therapy: "therapy_long"
+    tbl_cross_sec_therapy: "therapy_cross_sec"
+    tbl_drugs: "drugs"
+    tbl_patient_data_result_num: "patient_data_result_num"
+    tbl_patient_data_result_cat: "patient_data_result_cat"
+    tbl_cols: 'cols'
+
 
     tbl_episodio: "episodio"
     tbl_processo: "processo"
@@ -26,8 +33,6 @@ schema:
     v_agreg_cat_values: "v_agreg_cat_values"
     v_agreg_num_values: "v_agreg_num_values"
     v_patient_data: "v_patient_data"
-    v_patient_data_result_cat: "v_patient_data_result_cat"
-    v_patient_data_result_num: "v_patient_data_result_num"
     v_patient_data_min_max_result: "v_patient_data_min_max_result"
     v_patient_data_min_max_result_cat: "v_patient_data_min_max_result_cat"
     v_params_merged: "v_params_merged"

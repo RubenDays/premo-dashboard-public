@@ -2,7 +2,6 @@ import json
 import pandas as pd
 import sqlalchemy.exc
 
-from src.utils.getters import get_columns_from_table
 from src.utils import global_vars
 
 
@@ -56,9 +55,13 @@ class MinMaxResultsCat:
                     df_params = self.__get_params_merged(where_query, conn)
 
         # Gets the names of the columns of the patient data
-        self.__log_info(f'Extracting columns from {global_vars.V_PATIENT_DATA}...')
+        self.__log_info(f'Extracting columns from {global_vars.TBL_PATIENT_DATA_RESULT_CAT}...')
         with self.__engine.begin() as conn:
-            patient_data_cols = get_columns_from_table(conn, 'v_patient_data')
+            df_patient_data_cat = pd.read_sql_query(f'select * from {global_vars.TBL_PATIENT_DATA_RESULT_CAT}', conn)
+            # patient_data_cols = get_columns_from_table(conn, 'v_patient_data')
+        patient_data_cols = [col for col in list(df_patient_data_cat.columns.values) if not str(col).isnumeric()]
+        patient_data_cols.remove('DATA_COLHEITA')
+
         self.__log_info(f'Extracted {len(patient_data_cols)}.')
 
         # Adds DT_COLHEITA because it's the date that will be used and not DATA_COLHEIA

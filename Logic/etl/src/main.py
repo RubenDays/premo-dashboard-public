@@ -3,8 +3,11 @@ from zipfile import ZipFile
 
 from src.process.f04_agreg_cat_values import AgregCatValues
 from src.process.f05_agreg_num_values import AgregNumValues
+from src.process.f06_0_import_delirium import ImportDelirium
 from src.process.f06_import_patient_data import ImportPatientData
 from src.process.f07_create_min_max_results_tbl import CreateMinMaxResultsTbl
+from src.process.f09_import_therapy import ImportTherapy
+from src.process.f10_create_cols_tbl import CreateColsTbl
 from src.utils import logger, connection
 from src.process.f00_import_lab_data import ImportLabData
 from src.process.f01_transform_values import TransformValues
@@ -63,6 +66,12 @@ def run06(log, engine, archive):
     import_patient_data.run()
 
 
+def run06_0(log, engine, archived_data):
+    # run script 06 - import delirium
+    import_delirium = ImportDelirium(logger=log, engine=engine, archived_data=archived_data)
+    import_delirium.run()
+
+
 def run07(log, engine):
     # run script 07 - create min max results
     create_min_max_results_tbl = CreateMinMaxResultsTbl(logger=log, engine=engine)
@@ -73,6 +82,18 @@ def run08(log, engine):
     # run script 08 - create min max categorized results
     min_max_results_cat = MinMaxResultsCat(logger=log, engine=engine)
     min_max_results_cat.run()
+
+
+def run09(log, engine, archive):
+    # run script 09 - Import therapy data
+    # import_therapy_data = ImportTherapy(logger=log, engine=engine, archive_data=archive)
+    import_therapy_data = ImportTherapy(logger=log, engine=engine, archive_data=archive)
+    import_therapy_data.run()
+
+
+def run10(log, engine):
+    create_cols = CreateColsTbl(logger=log, engine=engine)
+    create_cols.run()
 
 
 def run_all(log, engine, archive):
@@ -86,6 +107,8 @@ def run_all(log, engine, archive):
     run06(log, engine, archive)
     run07(log, engine)
     run08(log, engine)
+    run09(log, engine, archive)
+    run10(log, engine)
 
 
 def print_help_menu():
@@ -98,8 +121,11 @@ def print_help_menu():
     print('04 - aggregate categorized values')
     print('05 - aggregate numeric values')
     print('06 - import patient data')
+    print('06-0 - import delirium')
     print('07 - create min max results table')
     print('08 - categorize min max results')
+    print('09 - Import therapy data')
+    print('10 - Create Cols Table')
     print('all - run all')
     print('')
 
@@ -135,10 +161,16 @@ def run():
         run05(LOGGER, ENGINE)
     elif script == '06':
         run06(LOGGER, ENGINE, archive)
+    elif script == '06-0':
+        run06_0(LOGGER, ENGINE, archive)
     elif script == '07':
         run07(LOGGER, ENGINE)
     elif script == '08':
         run08(LOGGER, ENGINE)
+    elif script == '09':
+        run09(LOGGER, ENGINE, archive)
+    elif script == '10':
+        run10(LOGGER, ENGINE)
     elif script == 'all':
         run_all(LOGGER, ENGINE, archive)
     else:
