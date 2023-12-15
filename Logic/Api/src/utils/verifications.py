@@ -3,6 +3,25 @@ import datetime
 from typing import Union
 
 
+def verify_ratio_params(ratio_params: str, params: list):
+    if not ratio_params or len(ratio_params) == 0:
+        return True, []
+
+    ratio_params_parts = ratio_params.split(',')
+    rp = []
+    for ratio_params_part in ratio_params_parts:
+        ratio_params = ratio_params_part.split('|')
+        if len(ratio_params) != 2:
+            return False, []
+
+        if not all([param in params for param in ratio_params]):
+            return False, []
+
+        rp.append([ratio_params[0], ratio_params[1]])
+
+    return True, rp
+
+
 # verifies if username has a valid format
 def is_valid_username(username: str):
     if username:
@@ -47,6 +66,11 @@ def is_valid_day_uci(val: Union[str, None]) -> bool:
         return False
 
     return int(val) >= 1
+
+
+def is_icu_days_input_valid(ids_input: Union[list, None]):
+    # uses the same function for verifying patient IDs, since it's the same process
+    return is_patient_ids_input_valid(ids_input)
 
 
 # Verifies if the patient ID input is valid.

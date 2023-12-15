@@ -1,6 +1,7 @@
 import pandas as pd
 
 from src.dal.dalInterfaces.ParamsDALInt import ParamsDALInt
+from src.utils import global_vars
 
 
 class ParamsDAL(ParamsDALInt):
@@ -17,7 +18,7 @@ class ParamsDAL(ParamsDALInt):
         return daily_params
 
     def get_merged_params(self, param_ids=None):
-        query = 'select ID_MERGED, NM_ANALISE, NM_PARAMETRO, UNIDADES from v_param_merged '
+        query = f'select ID_MERGED, NM_ANALISE, NM_PARAMETRO, UNIDADES from {global_vars.V_PARAMS_MERGED} '
 
         if param_ids is None:
             param_ids = []

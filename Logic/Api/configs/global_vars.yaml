@@ -5,7 +5,7 @@ input:
     col_episodio: "DATA_ADMISSAO_UCI"
     configs_base: "./configs"
     logs_base: "./logs"
-    
+
 schema:
     tbl_colheita: "colheita"
     tbl_resultado: "resultado"
@@ -14,20 +14,23 @@ schema:
     tbl_cat_values: "filtered_cat_values"
     tbl_transformed_filtered_values: "transformed_filtered_values"
     tbl_patient_min_max_result: "patient_min_max_result"
-    
+    tbl_therapy_long: "therapy_long"
+    tbl_therapy_cross_sec: "therapy_cross_sec"
+    tbl_patient_data_result_cat: "patient_data_result_cat"
+    tbl_patient_data_result_num: "patient_data_result_num"
+
     tbl_episodio: "episodio"
     tbl_processo: "processo"
     tbl_login: "login"
     tbl_vmi: "vmi"
     tbl_ecmo: "ecmo"
     tbl_comorb: "comorbidade"
-    
+    tbl_cols: "cols"
+
     v_filtered: "v_filtered_values"
     v_agreg_cat_values: "v_agreg_cat_values"
     v_agreg_num_values: "v_agreg_num_values"
     v_patient_data: "v_patient_data"
-    v_patient_data_result_cat: "v_patient_data_result_cat"
-    v_patient_data_result_num: "v_patient_data_result_num"
     v_patient_data_min_max_result: "v_patient_data_min_max_result"
     v_patient_data_min_max_result_cat: "v_patient_data_min_max_result_cat"
     v_params_merged: "v_params_merged"

@@ -7,6 +7,7 @@ class InitFormData(BaseModel):
     daily_params: list = []
     waves: list = []
     demography: list = []
+    therapy: list = []
 
 
 class InitData(BaseModel):

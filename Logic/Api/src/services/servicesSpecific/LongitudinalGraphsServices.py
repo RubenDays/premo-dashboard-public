@@ -1,5 +1,6 @@
 import pandas as pd
 from lifelines import KaplanMeierFitter
+import numpy as np
 from lifelines.statistics import multivariate_logrank_test
 
 from src.dal.dalInterfaces.GenericDALInt import GenericDALInt
@@ -8,9 +9,10 @@ from src.dal.dalInterfaces.PatientDataDALInt import PatientDataDALInt
 from src.dto.DataModels import DataKMFetchReq, DataLongFetchReq
 from src.exceptions.CustomExceptions import BadRequestException
 from src.services.servicesInterfaces.LongitudinalGraphsServInt import LongitudinalGraphsServInt
-from src.utils.data import verify_long_line_selectors, verify_km_line_selectors, get_param_info
+from src.utils.data import verify_long_line_selectors, verify_km_line_selectors, get_param_info, \
+    get_params_info_with_ratios
 from src.utils.logger import get_app_logger
-from src.utils.verifications import is_float
+from src.utils.verifications import is_float, verify_ratio_params
 
 
 class LongitudinalGraphsServices(LongitudinalGraphsServInt):
@@ -25,7 +27,7 @@ class LongitudinalGraphsServices(LongitudinalGraphsServInt):
         self.__daily_param_cols = generic_dal.get_daily_params()
         self.__enum_columns = patient_data_dal.get_enum_columns()
 
-    def get_longitudinal_separated_data(self, data_fetch_req: DataLongFetchReq):
+    def __param_evolution_verify_and_fetch(self, data_fetch_req):
         data_fetch_dal, errors = verify_long_line_selectors(data_fetch_req)
 
         param = data_fetch_req.params
@@ -34,12 +36,46 @@ class LongitudinalGraphsServices(LongitudinalGraphsServInt):
                     (not data_fetch_dal.res_daily and param not in self.__param_cols):
                 errors['params'] = 'Valores de parâmetro inválidos'
             else:
-                data_fetch_dal.params.extend([param, 'VAGA'])
+                data_fetch_dal.params = [param]
 
         if len(errors) > 0:
             raise BadRequestException(content=errors)
 
+        # verify ratio params
+        rp_check, rps = verify_ratio_params(data_fetch_req.ratio_params,
+                                            self.__daily_param_cols if data_fetch_dal.res_daily else self.__param_cols)
+        if not rp_check:
+            errors['ratio_params'] = 'Valores de parâmetro inválidos'
+
+        # verify amount of params
+        if len(data_fetch_dal.params) + len(rps) != 1:
+            errors['ratio_params'] = 'Valores de parâmetro inválidos'
+            errors['params'] = 'Valores de parâmetro inválidos'
+
+        params = []
+        params.extend(data_fetch_dal.params)
+        data_fetch_dal.params.extend(list(set(np.array(rps).flatten())))
+
         df_all = self.__patient_data_dal.fetch_long_data(data_fetch_dal)
+
+        named_params = get_params_info_with_ratios(data_fetch_dal.params, data_fetch_dal.res_daily, rps,
+                                                   self.__params_dal.get_merged_params)
+
+        for rp in rps:
+            dividend = rp[0]
+            divisor = rp[1]
+            dividend_values = pd.to_numeric(df_all[dividend])
+            param = f'{dividend}_{divisor}'
+            divisor_values = pd.to_numeric(df_all[divisor])
+            df_all[param] = np.where(divisor_values != 0, dividend_values / divisor_values, np.nan) \
+                .round(decimals=3)
+
+        df_all = df_all.dropna()
+
+        return param, named_params, df_all, data_fetch_dal
+
+    def get_longitudinal_separated_data(self, data_fetch_req: DataLongFetchReq):
+        param, named_params, df_all, data_fetch_dal = self.__param_evolution_verify_and_fetch(data_fetch_req)
 
         # calculates the median for each patient in each uci day and converts the result into float
         df_median = df_all.groupby(['ID_PACIENTE', 'DIA_UCI'])[[param]].median().reset_index().astype({param: float})
@@ -56,38 +92,15 @@ class LongitudinalGraphsServices(LongitudinalGraphsServInt):
                 'y': d[param].round(decimals=3).values.tolist()
             })
 
-        analysis_name, param_name, units = \
-            get_param_info(param, data_fetch_dal.res_daily, self.__params_dal.get_merged_params)
-
         return {
             'graphs_data': [{
                 'lines_data': lines_data
             }],
-            'param': {
-                'analysisName': analysis_name,
-                'paramName': param_name,
-                'units': units
-            }
+            'param': named_params[param]
         }
 
     def get_longitudinal_aggr_data(self, data_fetch_req: DataLongFetchReq):
-        data_fetch_dal, errors = verify_long_line_selectors(data_fetch_req)
-
-        param = data_fetch_req.params
-        if param:
-            if (data_fetch_dal.res_daily and param not in self.__daily_param_cols) or \
-                    (not data_fetch_dal.res_daily and param not in self.__param_cols):
-                errors['params'] = 'Valores de parâmetro inválidos'
-            else:
-                data_fetch_dal.params.extend([param, 'VAGA'])
-
-        if len(errors) > 0:
-            raise BadRequestException(content=errors)
-
-        df_all = self.__patient_data_dal.fetch_long_data(data_fetch_dal)
-
-        analysis_name, param_name, units = \
-            get_param_info(param, data_fetch_dal.res_daily, self.__params_dal.get_merged_params)
+        param, named_params, df_all, data_fetch_dal = self.__param_evolution_verify_and_fetch(data_fetch_req)
 
         vagas_labels = df_all['VAGA'].unique().tolist()
         vagas_labels.sort()
@@ -108,7 +121,7 @@ class LongitudinalGraphsServices(LongitudinalGraphsServInt):
             df_day_uci_median = df_day_uci.groupby(['DIA_UCI'])[[param]].median().reset_index().astype({param: float})
 
             waves_graphs.append({
-                'subtitle': f'Vaga {vaga}',
+                'subtitle': vaga,
                 'x': df_day_uci_median['DIA_UCI'].values.tolist(),
                 'y': df_day_uci_median[param].round(decimals=3).values.tolist()
             })
@@ -123,16 +136,10 @@ class LongitudinalGraphsServices(LongitudinalGraphsServInt):
         all_graph["x"] = df_day_uci_all_median['DIA_UCI'].values.tolist()
         all_graph["y"] = df_day_uci_all_median[param].round(decimals=3).values.tolist()
 
-        label = {
-            'analysisName': analysis_name,
-            'paramName': param_name,
-            'units': units
-        }
-
         return {
             "all_graph": all_graph,
             "waves_graphs": waves_graphs,
-            'label': label
+            'label': named_params[param]
         }
 
     def get_km_data(self, data_fetch_req: DataKMFetchReq):
@@ -210,7 +217,7 @@ class LongitudinalGraphsServices(LongitudinalGraphsServInt):
             df_objs = df_cutoff_vals
 
         # initialize the list that contains the data for each wave
-        waves_km_data = [{'subtitle': f'Vaga {vaga}', 'data': []} for vaga in vagas_labels]
+        waves_km_data = [{'subtitle': vaga, 'data': []} for vaga in vagas_labels]
 
         # add a group for each one
         for idx, df_obj in enumerate(df_objs):

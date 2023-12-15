@@ -21,7 +21,7 @@ class StatsGraphsRouter(APIRouter):
         super().add_api_route(path='/nominal', endpoint=self.fetch_patient_data_nominal, methods=['GET'])
 
     def fetch_boxplot_data(self, user: User = Depends(get_current_active_user), query_params: DataFetchReq = Depends()):
-        data = self.__stats_graphs_services.get_boxplot_data(query_params)
+        data = self.__stats_graphs_services.get_boxplot_data(user.username, query_params)
 
         return data
 

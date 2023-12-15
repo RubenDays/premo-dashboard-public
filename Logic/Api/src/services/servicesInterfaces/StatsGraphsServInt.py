@@ -3,7 +3,7 @@ from src.dto.DataModels import DataFetchReq
 
 class StatsGraphsServInt:
 
-    def get_boxplot_data(self, data_fetch_req: DataFetchReq):
+    def get_boxplot_data(self, username: str, data_fetch_req: DataFetchReq):
         raise Exception('StatsGraphsServInt.get_boxplot_data: Not implemented.')
 
     def get_scatter_data(self, data_fetch_req: DataFetchReq):

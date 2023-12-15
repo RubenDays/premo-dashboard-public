@@ -9,6 +9,23 @@ from typing import Union
 # values from previous calls and will result in inconsistencies.
 # ______________________________________________________________________________________________________________________
 
+class ChangeColsReq(BaseModel):
+    demography: list
+    params: list
+    non_selected: list
+
+
+class ChangeColsDal:
+    demography: list
+    params: list
+    non_selected: list
+
+    def __init__(self):
+        self.demography = []
+        self.params = []
+        self.non_selected = []
+
+
 # client to API
 class UpdateUserBody(BaseModel):
     username: Union[str, None]
@@ -53,6 +70,11 @@ class DataExportReq(BaseModel):
     patient_ids: Union[str, None]
     begin_date: Union[str, None]
     end_date: Union[str, None]
+    demography: Union[str, None]
+    params: Union[str, None]
+    res_daily: Union[str, None]
+    therapy: Union[str, None]
+    day_uci: Union[str, None]
 
 
 # Services to DAL
@@ -61,12 +83,22 @@ class DataExportDAL:
     patient_ids_single: list
     begin_date: Union[str, None]
     end_date: Union[str, None]
+    demography: list
+    params: list
+    res_daily: bool
+    icu_days_single: list
+    icu_days_interval: list
 
     def __init__(self):
         self.patient_ids_interval = []
         self.patient_ids_single = []
         self.begin_date = None
         self.end_date = None
+        self.demography = []
+        self.params = []
+        self.res_daily = False
+        self.icu_days_single = []
+        self.icu_days_interval = []
 
 
 # client -> API
@@ -81,6 +113,7 @@ class DataFetchReq(BaseModel):
     params: Union[str, None]    # quantitative variables
     res_daily: Union[str, None]
     day_uci: Union[str, None]
+    ratio_params: Union[str, None] # quantitative variables for ratio
 
 
 # Services -> DAL
@@ -95,7 +128,9 @@ class DataFetchDAL:
     demography: list
     params: list
     res_daily: bool
-    day_uci: int
+    icu_days_single: list
+    icu_days_interval: list
+    ratio_params: list
 
     def __init__(self):
         self.patient_ids_interval = []
@@ -108,7 +143,9 @@ class DataFetchDAL:
         self.demography = []
         self.params = []
         self.res_daily = False
-        self.day_uci = 0
+        self.icu_days_single = []
+        self.icu_days_interval = []
+        self.ratio_params = []
 
 
 # client -> API
@@ -156,6 +193,7 @@ class DataLongFetchReq(BaseModel):
     end_date: Union[str, None]
     res_daily: Union[str, None]
     params: Union[str, None]  # quantitative variables
+    ratio_params: Union[str, None]  # quantitative ratio variables
 
 
 # Services -> DAL
@@ -176,3 +214,18 @@ class DataLongFetchDAL:
         self.params = []
 
 
+class DataFetchTherapy:
+    patient_ids_interval: list
+    patient_ids_single: list
+    begin_date: Union[str, None]
+    end_date: Union[str, None]
+    therapy: list
+    longitudinal: bool
+
+    def __init__(self):
+        self.patient_ids_interval = []
+        self.patient_ids_single = []
+        self.begin_date = None
+        self.end_date = None
+        therapy = []
+        longitudinal = False

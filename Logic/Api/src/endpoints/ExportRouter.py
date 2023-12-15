@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
-from src.dto.DataExportModels import DataExportReq
+from src.dto.DataModels import DataExportReq
 from src.dto.UserModels import User
 from src.services.SecurityServices import get_current_active_user
 from src.services.servicesInterfaces.DataExportServInt import DataExportServInt

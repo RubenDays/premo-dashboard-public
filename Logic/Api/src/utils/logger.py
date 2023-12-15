@@ -5,7 +5,38 @@ from datetime import date
 
 from src.utils.singleton import singleton
 
-log_formater_str = "%(asctime)s [ThreadID: %(thread)d] [%(levelname)s]: %(message)s"
+log_formater_str = "%(asctime)s [%(levelname)s]: %(message)s"
+
+
+class MyLogger:
+
+    def __init__(self, logger):
+        self.__logger = logger
+
+    def info(self, msg: str, user: str | None = None):
+        if user:
+            self.__logger.info('[%s] - %s', user, msg)
+        else:
+            self.__logger.info('[%s] - %s', '', msg)
+
+    def warning(self, msg: str, user: str | None = None):
+        if user:
+            self.__logger.warning('[%s] - %s', user, msg)
+        else:
+            self.__logger.warning('[%s] - %s', '', msg)
+
+    def error(self, msg: str, user: str | None = None):
+        if user:
+            self.__logger.error('[%s] - %s', user, msg)
+        else:
+            self.__logger.error('[%s] - %s', '', msg)
+
+    def exception(self, msg: str, user: str | None = None):
+        if user:
+            self.__logger.exception('[%s] - %s', user, msg)
+        else:
+            self.__logger.exception('[%s] - %s', '', msg)
+
 
 
 @singleton
@@ -60,7 +91,7 @@ class Logger:
 
         info_logger.debug("\n\n\n----------------------------------------------------------------------------\n\n")
 
-        self.info_logger = info_logger
+        self.info_logger = MyLogger(info_logger)
 
 
 def get_app_logger():

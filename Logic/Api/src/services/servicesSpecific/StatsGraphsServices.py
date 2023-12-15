@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+
 from src.dal.dalInterfaces.GenericDALInt import GenericDALInt
 from src.dal.dalInterfaces.ParamsDALInt import ParamsDALInt
 from src.dal.dalInterfaces.PatientDataDALInt import PatientDataDALInt
@@ -5,10 +8,10 @@ from src.dto.DataModels import DataFetchReq, DataFetchDAL
 from src.exceptions.CustomExceptions import BadRequestException
 from src.services.servicesInterfaces.StatsGraphsServInt import StatsGraphsServInt
 from src.utils import data
-from src.utils.data import get_param_info
+from src.utils.data import get_params_info, get_params_info_with_ratios
 from src.utils.logger import get_app_logger
 from src.utils.verifications import is_patient_ids_input_valid, is_valid_date, is_date_greater, \
-    is_positive_number, is_number, is_valid_day_uci
+    is_positive_number, is_number, is_valid_day_uci, verify_ratio_params, is_icu_days_input_valid
 
 
 class StatsGraphsServices(StatsGraphsServInt):
@@ -23,8 +26,8 @@ class StatsGraphsServices(StatsGraphsServInt):
         self.__daily_param_cols = generic_dal.get_daily_params()
         self.__enum_columns = patient_data_dal.get_enum_columns()
 
-    def get_boxplot_data(self, data_fetch_req: DataFetchReq):
-    
+    def get_boxplot_data(self, username: str, data_fetch_req: DataFetchReq):
+        self.__logger.info('Verifying line selectors...', username)
         data_fetch_dal, errors = self.__verify_line_selectors(data_fetch_req)
 
         # verify demography, only if it exists
@@ -34,18 +37,31 @@ class StatsGraphsServices(StatsGraphsServInt):
 
         # verify params
         param = data_fetch_req.params
-        if not param:
+        ratio_param = data_fetch_req.ratio_params
+        if (not param and not ratio_param) or (param and ratio_param):
             errors['params'] = 'Valores de parâmetro inválidos'
+            errors['ratio_params'] = 'Valores de parâmetro inválidos'
 
         if len(errors) > 0:
             raise BadRequestException(content=errors)
 
-        if data_fetch_dal.res_daily:
-            if param not in self.__daily_param_cols:
+        # verify params
+        if param is not None:
+            if param not in (self.__daily_param_cols if data_fetch_dal.res_daily else self.__param_cols):
                 errors['params'] = 'Valores de parâmetro inválidos'
-        else:
-            if param not in self.__param_cols:
-                errors['params'] = 'Valores de parâmetro inválidos'
+            else:
+                data_fetch_dal.params = [param]
+
+        # verify ratio params
+        rp_check, rps = verify_ratio_params(data_fetch_req.ratio_params,
+                                           self.__daily_param_cols if data_fetch_dal.res_daily else self.__param_cols)
+        if not rp_check:
+            errors['ratio_params'] = 'Valores de parâmetro inválidos'
+
+        # verify amount of params
+        if len(data_fetch_dal.params) + len(rps) != 1:
+            errors['ratio_params'] = 'Valores de parâmetro inválidos'
+            errors['params'] = 'Valores de parâmetro inválidos'
 
         if len(errors) > 0:
             raise BadRequestException(content=errors)
@@ -54,20 +70,36 @@ class StatsGraphsServices(StatsGraphsServInt):
             data_fetch_dal.demography = [demography]
 
         if demography != 'VAGA':
-            data_fetch_dal.params = ['VAGA']
-        data_fetch_dal.params.extend([param])
+            data_fetch_dal.demography.extend(['VAGA'])
+
+        params = []
+        params.extend(data_fetch_dal.params)
+        data_fetch_dal.params.extend(list(set(np.array(rps).flatten())))
 
         # fetch data
         df_data = self.__patient_data_dal.fetch_patient_data(data_fetch_dal)
 
+        named_params = get_params_info_with_ratios(params, data_fetch_dal.res_daily, rps, self.__params_dal.get_merged_params)
+
+        for rp in rps:
+            dividend = rp[0]
+            divisor = rp[1]
+            dividend_values = pd.to_numeric(df_data[dividend])
+            param = f'{dividend}_{divisor}'
+            divisor_values = pd.to_numeric(df_data[divisor])
+            df_data[param] = np.where(divisor_values != 0, dividend_values / divisor_values, np.nan)\
+                .round(decimals=3)
+
+        df_data = df_data.dropna()
+
         datasets = []
         display_labels = ['']
-        
+
         ds = df_data['VAGA'].unique().tolist()
         ds.sort()
         vagas_ds = []
         for vaga in ds:
-            vagas_ds.append(tuple((f'Vaga {vaga}', df_data[df_data['VAGA'] == vaga])))
+            vagas_ds.append(tuple((vaga, df_data[df_data['VAGA'] == vaga])))
 
         # gets the different values of demography, if one has been selected, and separates the values by demography
         # otherwise, use all values as one demography value
@@ -90,14 +122,11 @@ class StatsGraphsServices(StatsGraphsServInt):
                     'values': [vals]
                 })
 
-        analysis_name, param_name, units = \
-            get_param_info(param, data_fetch_dal.res_daily, self.__params_dal.get_merged_params)
-
         return {
             'labels': {
-                'paramName': param_name,
-                'analysisName':analysis_name,
-                'units': units,
+                'paramName': named_params[param]['param_name'],
+                'analysis_name': named_params[param]['analysis_name'],
+                'units': named_params[param]['units'],
                 'xText': demography.replace('_', ' ').title() if demography else '',
                 'xTicks': display_labels
             },
@@ -112,29 +141,50 @@ class StatsGraphsServices(StatsGraphsServInt):
             errors['params'] = 'Valores de parâmetro inválidos'
         else:
             params_parts = data_fetch_req.params.split(',')
-            if len(params_parts) == 2:
+            if len(params_parts) > 0:
                 # if all params exist or if all daily params exist
                 if (not data_fetch_dal.res_daily and all([param in self.__param_cols for param in params_parts])) \
-                        or (data_fetch_dal.res_daily and all([param in self.__daily_param_cols for param in params_parts])):
+                        or (
+                        data_fetch_dal.res_daily and all([param in self.__daily_param_cols for param in params_parts])):
                     data_fetch_dal.params = params_parts
                 else:
                     errors['params'] = 'Valores de parâmetro inválidos'
             else:
                 errors['params'] = 'Valores de parâmetro inválidos'
 
+        # verify ratio params
+        rp_check, rps = verify_ratio_params(data_fetch_req.ratio_params,
+                                           self.__daily_param_cols if data_fetch_dal.res_daily else self.__param_cols)
+        if not rp_check:
+            errors['ratio_params'] = 'Valores de parâmetro inválidos'
+
+        if len(data_fetch_dal.params) + len(rps) != 2:
+            errors['ratio_params'] = 'Valores de parâmetro inválidos'
+            errors['params'] = 'Valores de parâmetro inválidos'
+
         if len(errors) > 0:
             raise BadRequestException(content=errors)
 
         data_fetch_dal.demography = ['VAGA']
 
-        df_data = self.__patient_data_dal.fetch_patient_data(data_fetch_dal).dropna()
+        params = []
+        params.extend(data_fetch_dal.params)
+        data_fetch_dal.params.extend(list(set(np.array(rps).flatten())))
 
-        if data_fetch_dal.res_daily:
-            params = list(map(lambda e: e.split('_')[-1], data_fetch_dal.params))
-        else:
-            params = data_fetch_dal.params
+        df_data = self.__patient_data_dal.fetch_patient_data(data_fetch_dal)
 
-        df_params = self.__params_dal.get_merged_params(params).set_index('ID_MERGED')
+        # params = get_params_info(data_fetch_dal.params, data_fetch_dal.res_daily, self.__params_dal.get_merged_params)
+        params = get_params_info_with_ratios(params, data_fetch_dal.res_daily, rps, self.__params_dal.get_merged_params)
+
+        for rp in rps:
+            dividend = rp[0]
+            divisor = rp[1]
+            dividend_values = pd.to_numeric(df_data[dividend])
+            divisor_values = pd.to_numeric(df_data[divisor])
+            df_data[f'{dividend}_{divisor}'] = np.where(divisor_values != 0, dividend_values / divisor_values, np.nan)\
+                .round(decimals=3)
+
+        df_data = df_data.dropna()
 
         vagas_labels = df_data['VAGA'].unique().tolist()
         vagas_labels.sort()
@@ -142,35 +192,22 @@ class StatsGraphsServices(StatsGraphsServInt):
         for vaga in vagas_labels:
             df_vaga = df_data[df_data['VAGA'] == vaga]
             graph = {
-                "subtitle": f'Vaga {vaga}',
+                "subtitle": vaga,
                 "x": [],
                 "y": []
             }
-            for idx, col in enumerate(data_fetch_dal.params):
+            for idx, col in enumerate(params):
                 if idx == 0:
                     graph["x"] = df_vaga[str(col)].values.tolist()
                 else:
                     graph["y"] = df_vaga[str(col)].values.tolist()
             waves_graphs.append(graph)
 
-        labels = {'xAxis': {}, 'yAxis': {}}
-        for idx, col in enumerate(data_fetch_dal.params):
-            col_parts = col.split('_')
-            col_id = int(col_parts[-1])
-            suffix = ' '.join(col_parts[:-1])
-            if len(suffix) > 0:
-                suffix = f'({suffix})'
-
-            param = df_params.loc[col_id]
-            if idx == 0:
-                axis = 'xAxis'
-            else:
-                axis = 'yAxis'
-
-            labels[axis] = {
-                'paramName': f'{param["NM_PARAMETRO"]} {suffix}'.strip(),
-                'units': param["UNIDADES"]
-            }
+        keys = list(params.keys())
+        labels = {
+            'xAxis': params[keys[0]],
+            'yAxis': params[keys[1]]
+        }
 
         return {
             'labels': labels,
@@ -200,7 +237,7 @@ class StatsGraphsServices(StatsGraphsServInt):
         data = []
         for vaga in ds:
             vaga_ds = df_data[df_data['VAGA'] == vaga]
-            vaga_title = f'Vaga {vaga}'
+            vaga_title = vaga
 
             values = []
             for label in labels:
@@ -246,10 +283,18 @@ class StatsGraphsServices(StatsGraphsServInt):
 
         # verify day uci
         if data_fetch_req.day_uci:
-            if not is_valid_day_uci(data_fetch_req.day_uci):
-                errors['day_uci'] = 'Dia de internamento de UCI inválida'
+
+            # remove whitespaces and separate with ';', also removing resulting empty strings
+            icu_days = [input_id for input_id in data_fetch_req.day_uci.strip(' ').split(';') if input_id]
+
+            # verify format of IDs
+            if not is_icu_days_input_valid(icu_days):
+                errors['day_uci'] = 'IDs não possuem o formato correto'
+            # if IDs are in the correct format, build data_export_dal
             else:
-                data_fetch_dal.day_uci = int(data_fetch_req.day_uci)
+                icu_days_interval, icu_days_single = data.create_icu_days_objs(icu_days)
+                data_fetch_dal.icu_days_interval = icu_days_interval
+                data_fetch_dal.icu_days_single = icu_days_single
 
         # verify end date
         if data_fetch_req.end_date:

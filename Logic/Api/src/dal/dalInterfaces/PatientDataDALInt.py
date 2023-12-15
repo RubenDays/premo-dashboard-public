@@ -5,8 +5,8 @@ from src.dto.DataModels import DataExportDAL, DataFetchDAL, DataKMFetchDAL, Data
 class PatientDataDALInt:
 
     # Retrieve data for exporting
-    def get_patient_data(self, data_export_req: DataExportDAL):
-        raise Exception('PatientDataDALInt.get_patient_data Not Implemented')
+    def get_export_patient_data(self, data_export_req: DataExportDAL):
+        raise Exception('PatientDataDALInt.get_export_patient_data Not Implemented')
 
     # Retrieve data for statistics (e.g. boxplots, scatter)
     def fetch_patient_data(self, data_fetch: DataFetchDAL):

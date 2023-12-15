@@ -13,12 +13,27 @@ class PatientDataDAL(PatientDataDALInt):
         self.__engine = engine
         self.__logger = get_app_logger()
 
-    def get_patient_data(self, conds: DataExportDAL):
+    def get_export_patient_data(self, conds: DataExportDAL):
+        if len(conds.demography) == 0 and len(conds.params) == 0:
+            select = ['*']
+        elif len(conds.params) > 0:
+            select = ['ID_PACIENTE', 'DT_COLHEITA' if conds.res_daily else 'DATA_COLHEITA', 'DATA_ADMISSAO_UCI',
+                      'DATA_SINT_DIAG', 'DATA_ALTA_UCI', 'DATA_ALTA_HOSPITAL', 'DATA_INICIO_VMI', 'DATA_FIM_VMI',
+                      'DATA_INICIO_ECMO', 'DATA_FIM_ECMO', 'DIA_UCI']
+            select.extend(conds.demography)
+            select.extend([f'`{p}`' for p in conds.params])
+        else:
+            select = ['ID_PACIENTE']
+            select.extend(conds.demography)
 
         # Create query depending on values received
         params = {}
-        query = 'select * from v_patient_data_min_max_result '
-        # query = 'select * from v_patient_data_result_num '
+        if conds.res_daily:
+            query = f'select {",".join(select)} from {global_vars.V_PATIENT_DATA_MIN_MAX_RESULT} '
+            dt_col = 'DT_COLHEITA'
+        else:
+            query = f'select {",".join(select)} from {global_vars.TBL_PATIENT_DATA_RESULT_NUM} '
+            dt_col = 'DATA_COLHEITA'
 
         # build query part for the patient IDs
         if conds.patient_ids_interval or conds.patient_ids_single:
@@ -36,6 +51,27 @@ class PatientDataDAL(PatientDataDALInt):
             query = query[:-2]
             query = query + ') '
 
+        # build query part for the uci day
+        if conds.icu_days_interval or conds.icu_days_single:
+            if len(params) > 0:
+                start_q = 'and ('
+            else:
+                start_q = 'where ('
+
+            query = query + start_q
+
+            for idx, day_uci in enumerate(conds.icu_days_single):
+                params[f'pDayUci{idx}'] = day_uci
+                query = query + f' DIA_UCI=%(pDayUci{idx})s OR'
+
+            for idx, day_uci in enumerate(conds.icu_days_interval):
+                params[f'pDayUciIl{idx}'] = day_uci['low']
+                params[f'pDayUciIh{idx}'] = day_uci['high']
+                query = query + f' (DIA_UCI between %(pDayUciIl{idx})s and %(pDayUciIh{idx})s) OR'
+
+            query = query[:-2]
+            query = query + ') '
+
         # build query part for the begin date
         if conds.begin_date:
             if len(params) > 0:
@@ -43,7 +79,7 @@ class PatientDataDAL(PatientDataDALInt):
             else:
                 start_q = 'where'
             params['pBeginDate'] = conds.begin_date
-            query = query + f'{start_q} DT_COLHEITA >= %(pBeginDate)s '
+            query = query + f'{start_q} {dt_col} >= %(pBeginDate)s '
 
         # build query part for the end date
         if conds.end_date:
@@ -52,9 +88,7 @@ class PatientDataDAL(PatientDataDALInt):
             else:
                 start_q = 'where'
             params['pEndDate'] = conds.end_date
-            query = query + f'{start_q} DT_COLHEITA <= %(pEndDate)s '
-
-        print(query)
+            query = query + f'{start_q} {dt_col} <= %(pEndDate)s '
 
         # queries the DB
         with self.__engine.connect() as conn:
@@ -82,7 +116,7 @@ class PatientDataDAL(PatientDataDALInt):
         params = {}
         query_started = False
 
-        selects = ['ID_PACIENTE', 'DIA_UCI']
+        selects = ['ID_PACIENTE', 'DIA_UCI', 'VAGA']
         param_cols = [f'`{col}`' for col in data_fetch.params]
         selects.extend(param_cols)
 
@@ -91,7 +125,7 @@ class PatientDataDAL(PatientDataDALInt):
             query = query + f'{global_vars.V_PATIENT_DATA_MIN_MAX_RESULT} '
             date_col_name = 'DT_COLHEITA'
         else:
-            query = query + f'v_patient_data_result_num '
+            query = query + f'{global_vars.TBL_PATIENT_DATA_RESULT_NUM} '
             date_col_name = 'DATA_COLHEITA'
 
         # build query part for the patient IDs
@@ -244,10 +278,10 @@ class PatientDataDAL(PatientDataDALInt):
 
         query = f'select {", ".join(selects)} from '
         if data_fetch.res_daily:
-            query = query + f'v_patient_data_min_max_result '
+            query = query + f'{global_vars.V_PATIENT_DATA_MIN_MAX_RESULT} '
             date_col_name = 'DT_COLHEITA'
         else:
-            query = query + f'v_patient_data_result_num '
+            query = query + f'{global_vars.TBL_PATIENT_DATA_RESULT_NUM} '
             date_col_name = 'DATA_COLHEITA'
 
         # build query part for the patient IDs
@@ -283,19 +317,31 @@ class PatientDataDAL(PatientDataDALInt):
                 start_q = 'and'
             else:
                 start_q = 'where'
-                query_started = True
+            query_started = True
             params['pEndDate'] = data_fetch.end_date
             query = query + f'{start_q} {date_col_name} <= %(pEndDate)s '
 
         # build query part for the uci day
-        if data_fetch.day_uci > 0:
+        if data_fetch.icu_days_interval or data_fetch.icu_days_single:
             if query_started:
-                start_q = 'and'
+                start_q = 'and ('
             else:
-                start_q = 'where'
-                query_started = True
-            params['pDayUci'] = data_fetch.day_uci
-            query = query + f'{start_q} DIA_UCI = %(pDayUci)s '
+                start_q = 'where ('
+
+            query = query + start_q
+
+            for idx, day_uci in enumerate(data_fetch.icu_days_single):
+                params[f'pDayUci{idx}'] = day_uci
+                query = query + f' DIA_UCI=%(pDayUci{idx})s OR'
+
+            for idx, day_uci in enumerate(data_fetch.icu_days_interval):
+                params[f'pDayUciIl{idx}'] = day_uci['low']
+                params[f'pDayUciIh{idx}'] = day_uci['high']
+                query = query + f' (DIA_UCI between %(pDayUciIl{idx})s and %(pDayUciIh{idx})s) OR'
+
+            query_started = True
+            query = query[:-2]
+            query = query + ') '
 
         # build query part for vagas
         if len(data_fetch.vagas) > 0:
