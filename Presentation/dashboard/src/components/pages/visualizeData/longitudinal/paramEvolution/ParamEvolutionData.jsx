@@ -5,10 +5,10 @@ import VisualizeData from '../../VisualizeData';
 import ParamEvolutionForm from './ParamEvolutionForm';
 
 
-const graphs = (graph_type, data) => {
+const graphs = (graph_type, data, language) => {
     switch (graph_type) {
         case 'long-separated': return <ScatterLineSeparated dataState={data} />
-        case 'long-aggr': return <ScatterLineAggr dataState={data} />
+        case 'long-aggr': return <ScatterLineAggr dataState={data} language={language} />
         default: return <></>
     }
 }

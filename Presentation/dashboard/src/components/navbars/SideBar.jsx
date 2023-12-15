@@ -3,10 +3,12 @@ import Nav from 'react-bootstrap/Nav';
 import SideBarItem from './SideBarItem';
 import { useOutletContext } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useTranslation } from 'react-i18next'
 
 
 export default function SideBar() {
     const [ctx] = useOutletContext()
+    const { t } = useTranslation()
 
     return (
         <div>
@@ -18,16 +20,16 @@ export default function SideBar() {
                     </div>
                 }
                 <hr className='sidebar-hr' />
-                <SideBarItem title='Página Inicial' icon={faHouse} path='/' />
-                <SideBarItem title='Dados Transversais' icon={faChartPie} path='/visualize-stats' />
-                <SideBarItem title='Dados Longitudinais' icon={faChartLine}>
-                    <SideBarItem title='Curvas Sobrevivência' path='/visualize-longitudinal/survival-curves' />
-                    <SideBarItem title='Evolução Parâmetros' path='/visualize-longitudinal/params-evolution' />
+                <SideBarItem title={t('sidebar.homepage')} icon={faHouse} path='/' />
+                <SideBarItem title={t('sidebar.cross-data')} icon={faChartPie} path='/visualize-stats' />
+                <SideBarItem title={t('sidebar.long-data')} icon={faChartLine}>
+                    <SideBarItem title={t('sidebar.surv-curves')} path='/visualize-longitudinal/survival-curves' />
+                    <SideBarItem title={t('sidebar.evol-params')} path='/visualize-longitudinal/params-evolution' />
                 </SideBarItem>
-                <SideBarItem title='Exportar' icon={faDownload} path='/export' />
-                <SideBarItem title='Importar' icon={faUpload} path='/import' />
+                <SideBarItem title={t('sidebar.export')} icon={faDownload} path='/export' />
+                <SideBarItem title={t('sidebar.import')} icon={faUpload} path='/import' />
                 { ctx && ctx.session.role === 'admin' && 
-                    <SideBarItem title='Gerir Utilizadores' icon={faUserGear} path='/user-management'/>
+                    <SideBarItem title={t('sidebar.manage-users')} icon={faUserGear} path='/user-management'/>
                 }
             </Nav>
         </div>

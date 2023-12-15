@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Row, Container  } from 'react-bootstrap';
 import { getDefaultConfig, getDefaultLayout } from '../plotDefaults';
 import MyPlot from '../MyPlot';
+import { useTranslation, getI18n } from 'react-i18next';
 
 const MAX_NUM_COLS = 3
 
 export default function BarChart({ dataState, controllers }) {
+    const{ t } = useTranslation()
     const [chartState, setChartState] = useState({
         chartData: {
             data: [],
@@ -18,7 +20,8 @@ export default function BarChart({ dataState, controllers }) {
         let graphs = []
 
         if (controllers.separateWaves) {
-            graphs = separateWaves(dataState.data, dataState.labels)
+            const subtitles = dataState.data.map(elem => { return `${t("graphs.labels.wave")} ${elem.subtitle}`})
+            graphs = separateWaves(subtitles, dataState.data, dataState.labels)
         } else if (controllers.selectedWave.length === 0) {
             graphs = joinAllWaves(dataState.data, dataState.labels)
         } else {
@@ -32,7 +35,7 @@ export default function BarChart({ dataState, controllers }) {
         newState.chartData.layout = generateLayout(controllers.selectedWave)
 
         setChartState(newState)
-    }, [dataState, controllers])
+    }, [dataState, controllers, getI18n().language])
 
     function generateLayout(selectedWave) {
         // set the layout of the plot
@@ -45,17 +48,16 @@ export default function BarChart({ dataState, controllers }) {
     }
 
     function getTitle(selectedWave) {
-        console.log(selectedWave)
-        let suffix = `Comparação por ${dataState.demography}`
+        const prefix = t("graphs.nominal.titles.prefix", {demo: dataState.demography})
 
         if (selectedWave.length === 0) {
             if (controllers.separateWaves) {
-                return `${suffix} para cada vaga`
+                return `${prefix} ${t("graphs.nominal.titles.suffix1")}`
             }
-            return `${suffix} para todas as vagas`
+            return `${prefix} ${t("graphs.nominal.titles.suffix2")}`
         }
 
-        return `${suffix} para a ${selectedWave[0].label}`
+        return `${prefix} ${t("graphs.nominal.titles.suffix3", { wave: selectedWave[0].label })}`
     }
 
     return (
@@ -101,10 +103,9 @@ function joinAllWaves(graphs, labels) {
 
 }
 
-function separateWaves(data, labels) {
+function separateWaves(subtitles, data, labels) {
     let graphs = []
 
-    const x = data.map(graph => graph.subtitle)
     const totals = data.map(d => calcTotal(d.values))
     
     labels.forEach((label, idx) => {
@@ -112,7 +113,7 @@ function separateWaves(data, labels) {
         const total = calcTotal(y)
         graphs.push({
             y: y,
-            x: x,
+            x: subtitles,
             type: 'bar',
             text: y.map((val, y_idx) => writeBarText(val, totals[y_idx])),
             name: label,

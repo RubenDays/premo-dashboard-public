@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Row, Container, Form, Col, InputGroup, Modal, Button  } from 'react-bootstrap';
 import Plotly from 'plotly.js-dist'
 import SelectCheckBox from './SelectCheckBox';
+import { useTranslation } from 'react-i18next';
 
 
 const DEFAULT_FILENAME = 'premo-plot'
@@ -27,6 +28,7 @@ export const DEFAULT_DL_OPT = {
  * This dlOpt has the same format as DEFAULT_DL_OPT.
  */
 export default function ModalDownload({ dlOpt, setDlOpt }) {
+    const { t } = useTranslation()
 
     function handleCloseModal() {
         setDefaultDlOpt()
@@ -62,7 +64,7 @@ export default function ModalDownload({ dlOpt, setDlOpt }) {
     return (
         <Modal className={'modal-dl'} show={dlOpt.gd} onHide={handleCloseModal}>
             <Modal.Header closeButton>
-                <Modal.Title>Descarregar Imagem</Modal.Title>
+                <Modal.Title> {t("download-img-form.title")} </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <InputGroup>
@@ -78,7 +80,7 @@ export default function ModalDownload({ dlOpt, setDlOpt }) {
             </Modal.Body>
             <Modal.Footer style={{justifyContent: 'center'}}>
                 <Button className='btn-generic' onClick={handleAcceptModal}>
-                    Descarregar
+                    {t("download-img-form.download-btn")}
                 </Button>
             </Modal.Footer>
         </Modal>

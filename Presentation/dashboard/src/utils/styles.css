@@ -1,3 +1,20 @@
+/* style form the export form */
+.export-form {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    margin: 0 10em;
+}
+
+
+/* style for the language selector*/
+.lang-sel {
+    width: 120px;
+    display: flex;
+    justify-content: end;
+}
+
+
 /* init page Cards */
 .init-card {
     width: 10rem;

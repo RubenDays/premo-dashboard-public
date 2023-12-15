@@ -3,6 +3,7 @@ import { faGear, faTrashCan, faCircleCheck } from '@fortawesome/free-solid-svg-i
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import UserManagementController from "./UserManagementController";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FETCH_STATUS, useFetch } from "../../../../utils/customHooks";
 import { MANAGEMENT_USERS_PATH } from "../../../../utils/paths";
 import MySpinner from "../../../MySpinner";
@@ -35,6 +36,8 @@ const DEFAULT_ITEMS_PER_PAGE = ITEMS_PER_PAGE_OPTS[0]
 
 export default function UserManagement() {
     const [ctx] = useOutletContext()
+
+    const { t } = useTranslation()
 
     // value in search bar
     const [searchValue, setSearchValue] = useState('')
@@ -202,7 +205,7 @@ export default function UserManagement() {
 
             {/* Title */}
             <Row>
-                <h2>Gestão de Utilizadores</h2>
+                <h2>{t("manage-users-page.title")}</h2>
             </Row>
 
             {/* Alert when creating/updating/deleting a user */}
@@ -210,21 +213,21 @@ export default function UserManagement() {
                 {/* Modal for successfully adding a user */}
                 {addUserState.userForm &&
                     <Alert show={!!addUserState.userForm} variant={'success'} onClose={() => closeAlert(setAddUserState)} dismissible>
-                        <FontAwesomeIcon icon={faCircleCheck} size='lg' /> Utilizador <b>{addUserState.userForm.username}</b> criado com sucesso!
+                        <FontAwesomeIcon icon={faCircleCheck} size='lg' /> {t("manage-users-page.alerts.user")} <b>{addUserState.userForm.username}</b> {t("manage-users-page.alerts.added")}
                     </Alert>
                 }
 
                 {/* Modal for successfully updating a user */}
                 {!updUserState.showModal && updUserState.userForm &&
                     <Alert show={!!updUserState.userForm} variant={'success'} onClose={() => closeAlert(setUpdUserState)} dismissible>
-                        <FontAwesomeIcon icon={faCircleCheck} size='lg' /> Utilizador <b>{updUserState.userForm.username}</b> atualizado com sucesso!
+                        <FontAwesomeIcon icon={faCircleCheck} size='lg' /> {t("manage-users-page.alerts.user")} <b>{updUserState.userForm.username}</b> {t("manage-users-page.alerts.updated")}
                     </Alert>
                 }
 
                 {/* Modal for successfully removing a user */}
                 {!delUserState.showModal && delUserState.userForm &&
                     <Alert show={!!delUserState.userForm} variant={'success'} onClose={() => closeAlert(setDelUserState)} dismissible>
-                        <FontAwesomeIcon icon={faCircleCheck} size='lg' /> Utilizador <b>{delUserState.userForm.username}</b> eliminado com sucesso!
+                        <FontAwesomeIcon icon={faCircleCheck} size='lg' /> {t("manage-users-page.alerts.user")} <b>{delUserState.userForm.username}</b> {t("manage-users-page.alerts.deleted")}
                     </Alert>
                 }
             </Row>
@@ -245,14 +248,14 @@ export default function UserManagement() {
             {/* Table */}
             <Row>
                 {fetchState.status === FETCH_STATUS.PENDING && <MySpinner />}
-                {fetchState.status === FETCH_STATUS.OK && buildTable(data, ctx.session.user, handlers)}
+                {fetchState.status === FETCH_STATUS.OK && buildTable(data, ctx.session.user, handlers, t)}
             </Row>
 
             {/* Pagination */}
             <Row>
                 <Col>
                     <InputGroup className='mb-3'>
-                        <Form.Text style={{padding: '0.2rem 0.5rem 0 0'}}> Itens por página </Form.Text>
+                        <Form.Text style={{padding: '0.2rem 0.5rem 0 0'}}> {t("manage-users-page.pagination")} </Form.Text>
                         <SelectCheckBox
                             className={'basic-single'}
                             value={[urlParts.maxPerPage]}
@@ -318,15 +321,15 @@ function buildPagination(page, maxPages, handler) {
     )
 }
 
-function buildTable(data, user, handlers) {
+function buildTable(data, user, handlers, t) {
     return (
         <Table striped bordered hover >
             <thead>
                 <tr>
-                    <th style={{width: '12rem'}}>Nome Utilizador</th>
-                    <th style={{width: '12rem'}}>Papel</th>
-                    <th style={{width: '6rem'}}>Estado</th>
-                    <th style={{width: '8rem'}}>Ação</th>
+                    <th style={{width: '12rem'}}>{t("manage-users-page.table.username")}</th>
+                    <th style={{width: '12rem'}}>{t("manage-users-page.table.role")}</th>
+                    <th style={{width: '6rem'}}>{t("manage-users-page.table.state.name")}</th>
+                    <th style={{width: '8rem'}}>{t("manage-users-page.table.action")}</th>
                 </tr>
             </thead>
             <tbody>
@@ -335,8 +338,8 @@ function buildTable(data, user, handlers) {
                             <td>{elem.username}</td>
                             <td>{elem.role}</td>
                             <td className="th-user-status">{elem.enabled 
-                                ? <Alert className="plain-user-status" key={`${elem.username}-status`} variant='success'> Ativo </Alert>
-                                : <Alert className="plain-user-status" key={`${elem.username}-status`} variant='danger'> Desativo </Alert>}
+                                ? <Alert className="plain-user-status" key={`${elem.username}-status`} variant='success'> {t("manage-users-page.table.state.active")} </Alert>
+                                : <Alert className="plain-user-status" key={`${elem.username}-status`} variant='danger'> {t("manage-users-page.table.state.inactive")} </Alert>}
                             </td>
                             {user !== elem.username
                             ?

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { Form, Button, Alert, Container, Row } from "react-bootstrap";
+import { useTranslation } from 'react-i18next'
+
 import { FETCH_STATUS, useFetch } from "../../utils/customHooks";
 import { FormTitleGroup } from "../../utils/forms/formComponents";
 import { IMPORT_PATH } from "../../utils/paths";
 import MySpinner from "../MySpinner";
 
 export default function Import() {
+    const { t } = useTranslation()
+
     const [state, setState] = useState({
         url: '',
         body: {},
@@ -35,7 +39,7 @@ export default function Import() {
         }    
     }
 
-    function exportOnClickHandler(ev) {
+    function importOnClickHandler(ev) {
         ev.preventDefault()
         if (!state.file) {
             return
@@ -59,14 +63,14 @@ export default function Import() {
             <Row>
                 <Alert variant='danger' show={error} onClose={onCloseAlert} dismissible>
                     <Alert.Heading className='text-center'>
-                        {'O serviço encontra-se indisponível de momento.'}
+                        {t("import-form.error")}
                     </Alert.Heading>
                 </Alert>
             </Row>
             
             <Row style={{justifyContent: 'center'}}>
-                <Form style={{width: '350px'}} noValidate onSubmit={exportOnClickHandler}>
-                    <FormTitleGroup title='Importar Dados' />
+                <Form style={{width: '350px'}} noValidate onSubmit={importOnClickHandler}>
+                    <FormTitleGroup title={t("import-form.title")} />
                     <Form.Group controlId="formFile" className="mb-3">
                         <Form.Control onChange={handleFileChange} type="file" />
                     </Form.Group>
@@ -74,7 +78,7 @@ export default function Import() {
                         <Button variant="generic" type="submit" >
                             { fetchState.status === FETCH_STATUS.PENDING 
                                 ?   <MySpinner className={'plain-spinner'}/>
-                                :   'Importar'
+                                :   t("import-form.import-btn")
                             }
                         </Button>
                     </Form.Group>

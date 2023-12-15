@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button, Form, InputGroup } from 'react-bootstrap';
-import { useFetch, FETCH_STATUS } from '../../../../../utils/customHooks';
-import { KM_PATH, LONGITUDINAL_PATH } from '../../../../../utils/paths';
+import { Button, Form } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next'
+
+import { KM_PATH } from '../../../../../utils/paths';
 import { CovidFormGroup, COVID_OPTS, CutoffFormGroup, DatesFormGroup, DemographyFormGroup, FormTitleGroup, isColsErr, ParamsFormGroup, PatientIDsFormGroup, WaveFormGroup } from '../../../../../utils/forms/formComponents'
-import { FormField, getErrorCode, VerifyForms } from '../../../../../utils/forms/formVerifiers';
+import { FormField, VerifyForms } from '../../../../../utils/forms/formVerifiers';
 import { COLS_ERR, PARAM_CUTOFF_ERR } from '../../../../../utils/forms/formCodeErrors';
 
 
 export default function SurvivalCurvesForm({ initDataForm, formRequest, setFormRequest }) {
+    const { t } = useTranslation()
+    
     const dateBeginRef = useRef()
     const dateEndRef = useRef()
 
@@ -51,8 +54,6 @@ export default function SurvivalCurvesForm({ initDataForm, formRequest, setFormR
             cutoffs: undefined
         }
     })
-
-    const fetchState = useFetch(formState.url)
 
     function onSubmitHandler(ev) {
         ev.preventDefault()
@@ -160,7 +161,7 @@ export default function SurvivalCurvesForm({ initDataForm, formRequest, setFormR
 
     return (
         <div>
-            <FormTitleGroup title='Curvas Sobrevivência' />
+            <FormTitleGroup title={t("surv-curves-form.title")} />
             <Form noValidate onSubmit={onSubmitHandler}>
 
                 <PatientIDsFormGroup err={formState.err} setPatientIds={setPatientIds} />
@@ -176,7 +177,7 @@ export default function SurvivalCurvesForm({ initDataForm, formRequest, setFormR
 
                 <CovidFormGroup err={formState.err} onChangeCovid={onChangeCovid} />
 
-                {isColsErr(formState.err) ? <Form.Label className='error-text'> Combinação inválida de demografia e parâmetros. </Form.Label> : <></>}
+                {isColsErr(formState.err) ? <Form.Label className='error-text'> {t("surv-curves-form.cols-err")} </Form.Label> : <></>}
 
                 <DemographyFormGroup 
                     err={formState.err}
@@ -198,7 +199,7 @@ export default function SurvivalCurvesForm({ initDataForm, formRequest, setFormR
                 {/*KM button*/}
                 <Form.Group className='centered-btn-grp' style={{paddingTop: '1rem'}}>
                     <Button type="submit" className='btn-generic'>
-                        Visualizar
+                    {t("surv-curves-form.visualize-btn")}
                     </Button>
                 </Form.Group>
 

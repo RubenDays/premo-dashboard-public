@@ -1,4 +1,4 @@
-import { Form, InputGroup, Row, Col, Container } from 'react-bootstrap';
+import { Form, Row, Col, Container } from 'react-bootstrap';
 import { SelectWaveController, SeparateWavesController } from '../../../utils/controllers/controllerComponents';
 import SelectCheckBox from '../../SelectCheckBox';
 

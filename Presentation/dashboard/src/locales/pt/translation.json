@@ -1,0 +1,277 @@
+{
+    "login": "Iniciar Sessão",
+    "logout": "Encerrar Sessão",
+    "login-form": {
+        "username-label": "Nome utilizador",
+        "username-placeholder": "Inserir nome utilizador",
+        "password-label": "Senha",
+        "password-placeholder": "Inserir senha",
+        "login-btn": "Iniciar sessão",
+        "errors": {
+            "credentials": "As credenciais são inválidas",
+            "server": "Algo de errado ocorreu no servidor"
+        }
+    },
+    "sidebar": {
+        "homepage": "Página Inicial",
+        "cross-data": "Dados Transversais",
+        "long-data": "Dados Longitudinais",
+        "surv-curves": "Curvas Sobrevivência",
+        "evol-params": "Evolução Parâmetros",
+        "export": "Exportar",
+        "import": "Importar",
+        "manage-users": "Gerir Utilizadores"
+    },
+    "homepage": {
+        "title": "Vista Geral",
+        "nums": {
+            "patients": "# Pacientes",
+            "collections": "# Colheitas",
+            "waves": "# Vagas"
+        },
+        "graph-titles": {
+            "patients-per-wave": "# Pacientes por vaga",
+            "collections-per-wave": "# Colheitas por vaga"
+        }
+    },
+    "cross-data-form": {
+        "title": "Dados Transversais",
+        "help": {
+            "title": "Tipos de gráficos:",
+            "circular": "Circulares/Barras: Demografia selecionada sem parâmetros",
+            "boxplot": "Boxplots: Um parâmetro selecionado",
+            "scatter": "Dispersão: Dois parâmetros selecionados sem demografia"
+        },
+        "visualize-btn": "Visualizar",
+        "cols-err": "Combinação inválida de demografia e parâmetros."
+    },
+    "surv-curves-form": {
+        "title": "Curvas Sobrevivência",
+        "visualize-btn": "Visualizar",
+        "cols-err": "Combinação inválida de demografia e parâmetros."
+    },
+    "evol-params-form": {
+        "title": "Evolução Parâmetros",
+        "visualize-btn": "Visualizar",
+        "cols-err": "Valores de parâmetro inválidos.",
+        "separate-patient-cb": "Separar por paciente"
+    },
+    "export-form": {
+        "title": "Exportar Dados",
+        "export-btn": "Exportar"
+    },
+    "import-form": {
+        "title": "Importar Dados",
+        "import-btn": "Importar",
+        "error": "O serviço encontra-se indisponível de momento."
+    },
+    "manage-users-page": {
+        "title": "Gestão de Utilizadores",
+        "alerts": {
+            "user": "Utilizador",
+            "added": "criado com sucesso!",
+            "deleted": "removido com sucesso!",
+            "updated": "atualizado com sucesso!"
+        },
+        "controller": {
+            "search-placeholder": "Procurar nomes de utilizador...",
+            "add-user-btn": "+ Adicionar novo utilizador"
+        },
+        "table": {
+            "username": "Nome Utilizador",
+            "role": "Papel",
+            "state": {
+                "name": "Estado",
+                "active": "Ativo",
+                "inactive": "Desativo"
+            },
+            "action": "Ação"
+        },
+        "pagination": "Itens por página"
+    },
+    "add-user-form": {
+        "title": "Adicionar novo utilizador",
+        "username": "Nome utilizador",
+        "role": "Papel",
+        "state": "Estado",
+        "add-btn": "Adicionar"
+    },
+    "delete-user-form": {
+        "title": "Remover utilizador",
+        "msg": "Pretende mesmo remover o utilizador",
+        "delete-btn": "Remover"
+    },
+    "update-user-form": {
+        "title": "Atualizar utilizador",
+        "username": "Nome Utilizador",
+        "role": "Papel",
+        "state": {
+            "name": "Estado",
+            "active": "Ativo",
+            "inactive": "Desativo"
+        },
+        "reset-pwd-cb": "Reiniciar senha",
+        "upd-btn": "Atualizar"
+    },
+    "download-img-form": {
+        "title": "Descarregar Imagem",
+        "download-btn": "Descarregar"
+    },
+    "form-fields": {
+        "patient-ids": {
+            "label": "IDs dos pacientes",
+            "placeholder": "Inserir IDs",
+            "help": "e.g. selecionar pacientes 10 e 15 a 20: 10;15-20",
+            "error": "IDs inválidos"
+        },
+        "parameters": {
+            "label": "Parâmetros",
+            "daily-params-label": "Resultados Únicos Diários (apenas UCI)",
+            "placeholder": "Nenhum selecionado",
+            "error": "Valores de parâmetro inválidos",
+            "select-all": "Todos"
+        },
+        "dates": {
+            "label": "Intervalo de datas",
+            "date-begin": "Data início",
+            "date-begin-error": "Data de início inválida",
+            "date-end": "Data fim",
+            "date-end-error": "Data de fim inválida"
+        },
+        "icu-day": {
+            "label": "Dia de internamento na UCI",
+            "placeholder": "Nenhum selecionado",
+            "help": "e.g. selecionar dias de UCI 1 e 3 a 5: 1;3-5",
+            "error": "Dias inválidos"
+        },
+        "demography": {
+            "label": "Demografia",
+            "placeholder": "Nenhuma selecionada",
+            "error": "Valores de demografia inválidos",
+            "select-all": "Todas"
+        },
+        "therapy": {
+            "label": "Terapêutica",
+            "placeholder": "Nenhuma selecionada",
+            "error": "Valores de terapêutica inválidos",
+            "select-all": "Todos"
+        },
+        "waves": {
+            "label": "Vagas",
+            "placeholder": "Nenhuma selecionada",
+            "error": "Vagas inválidas"
+        },
+        "covid": {
+            "covid": "Covid",
+            "no-covid": "Não Covid",
+            "both": "Ambos",
+            "error": "Valor de Covid inválido."
+        },
+        "cutoff": {
+            "label": "Pontos de corte",
+            "placeholder": "Inserir pontos de corte",
+            "errors": {
+                "format": "Formatação inválida.",
+                "empty": "É necessário cutoff na presença de parâmetro."
+            },
+            "help": {
+                "line1": "Apenas válido na presença de parâmetros.",
+                "line2": "e.g. selecionar cutoff <10 e entre 15 e 20: <10;15-20"
+            }
+        },
+        "icu": {
+            "icu": "UCI",
+            "no-icu": "Não UCI",
+            "both": "Ambos",
+            "error": "Valor de UCI inválido."
+        },
+        "ratio-params": {
+            "error": "Valores de parâmetro inválidos"
+        }
+    },
+    "graphs": {
+        "nominal": {
+            "controller": {
+                "graph-type": {
+                    "bar": "Gráfico barras",
+                    "circular": "Gráfcos circular"
+                }
+            },
+            "titles": {
+                "prefix": "Comparação por {{demo}}",
+                "suffix1": "para cada vaga",
+                "suffix2": "para todas as vagas",
+                "suffix3": "para a {{wave}}"
+            }
+        },
+        "boxplot": {
+            "controller": {
+                "pvalue": {
+                    "cb": "Mostrar valores P",
+                    "help": "Para obter os valores P é necessário dia de internamento e um parâmetro único diário."
+                },
+                "outliers": {
+                    "cb": "Esconder valores atípicos"
+                }
+            },
+            "titles": {
+                "prefix1": "Comparação de {{analysis}} {{param}}{{units}}",
+                "prefix2": "Comparação de {{analysis}} {{param}}{{units}} por {{demo}}",
+                "suffix1": "para cada vaga",
+                "suffix2": "para todas as vagas",
+                "suffix3": "para a {{wave}}"
+            }
+        },
+        "scatter": {
+            "titles": {
+                "prefix": "Gráfico de dispersão entre {{param1}} e {{param2}},",
+                "suffix1": "para cada vaga",
+                "suffix2": "para todas as vagas",
+                "suffix3": "para a {{wave}}"
+            }
+        },
+        "surv-curves": {
+            "titles": {
+               "prefix1" : "Curvas de sobrevivência por {{var1}}",
+               "prefix2" : "Curvas de sobrevivência por {{var1}} e por {{var2}}",
+               "suffix1": "em todas as vagas",
+               "suffix2": "na {{wave}}",
+               "suffix3": "em cada vaga"
+            },
+            "xtitle": "Tempo em dias, desde a admissão na UCI",
+            "ytitle": "Probabilidade de sobrevivência",
+            "table": {
+                "all": "Todos",
+                "test": "Teste"
+            }
+        },
+        "scatter-lines-aggr": {
+            "xtitle": "Tempo em dias, desde a admissão na UCI",
+            "titles": {
+                "prefix1": "Evolução {{param}}",
+                "prefix2": "Evolução de {{analysis}} | {{param}}",
+                "suffix1": "para {{wave}}",
+                "suffix2": "para cada vaga",
+                "suffix3": "para todas as vagas"
+            }
+        },
+        "scatter-lines-sep": {
+            "xtitle": "Tempo em dias, desde a admissão na UCI",
+            "titles": {
+                "prefix1": "Evolução de {{param}}",
+                "prefix2": "Evolução de {{analysis}} | {{param}}",
+                "suffix": "para cada paciente"
+            }
+        },
+        "labels": {
+            "wave": "Vaga"
+        }
+    },
+    "controller-generic": {
+        "wave-placeholder": "Escolher Vaga",
+        "separate-waves-cb": "Separar por vagas"
+    },
+    "plotly-buttons": {
+        "download-img": "Descarregar imagem"
+    }
+}

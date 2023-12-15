@@ -12,6 +12,8 @@ export const COLS_ERR = 256 // combination of demography and params are verified
 export const CUTOFF_ERR = 512
 export const PARAM_CUTOFF_ERR = 1024 // in case there's no cutoff in the presence of a param
 export const DAY_UCI_ERR = 2048
+export const THERAPY_ERR = 4096
+export const RATIO_PARAM_ERR = 8192
 
 export const ERROR_FIELDS = {
     'patient_ids': PATIENT_IDS_ERR,
@@ -23,5 +25,7 @@ export const ERROR_FIELDS = {
     'cutoff': CUTOFF_ERR,
     'param': PARAMS_ERR,
     'demography': DEMO_ERR,
-    'day_uci': DAY_UCI_ERR
+    'day_uci': DAY_UCI_ERR,
+    'therapy': THERAPY_ERR,
+    'ratio_param': RATIO_PARAM_ERR,
 }

@@ -1,7 +1,9 @@
-import { Form, InputGroup, Row, Col, Container, OverlayTrigger, Tooltip, Button, Image } from 'react-bootstrap';
-import SelectCheckBox from '../../SelectCheckBox';
+import { Form, InputGroup, Row, Col, Container, OverlayTrigger, Tooltip, Button } from 'react-bootstrap';
+import { SelectWaveController, SeparateWavesController } from '../../../utils/controllers/controllerComponents';
+import { useTranslation } from 'react-i18next';
 
 export default function BoxPlotController({ options }) {
+    const { t } = useTranslation()
 
   return (
       <Container>
@@ -9,29 +11,19 @@ export default function BoxPlotController({ options }) {
 
           {/* select wave controller */}
           <Col>
-            <Form.Group style={{width: '178px'}}>
-                  <SelectCheckBox
-                    value={options.waves.value}
-                    maxSelected={1}
-                    isMulti
-                    onChangeHandler={options.waves.handler}
-                    options={options.waves.options} 
-                    placeholder={'Escolher Vaga'} />
-            </Form.Group>
+              <SelectWaveController
+                value={options.waves.value}
+                options={options.waves.options}
+                handler={options.waves.handler}
+              />
           </Col>
 
           {/* toggle show separated waves controller */}
           <Col>
-            <Form.Group>
-              <InputGroup>
-                  <Form.Check 
-                    type="checkbox"
-                    checked={options.separateWaves.isChecked}
-                    onChange={options.separateWaves.handler} 
-                    label='Separar por vagas' 
-                  />      
-              </InputGroup>
-            </Form.Group>
+            <SeparateWavesController
+                isChecked={options.separateWaves.isChecked}
+                handler={options.separateWaves.handler} 
+            />
           </Col>
 
           {/* toggle P values controller */}
@@ -42,11 +34,11 @@ export default function BoxPlotController({ options }) {
                   disabled={options.pvals.disabled} 
                   type="checkbox" 
                   onChange={options.pvals.handler} 
-                  label='Mostrar valores P'
+                  label={t("graphs.boxplot.controller.pvalue.cb")}
                   checked={options.pvals.isChecked}
                 />
                 {options.pvals.disabled ? 
-                <OverlayTrigger placement="bottom" overlay={<Tooltip id="button-tooltip-2">Para obter os valores P é necessário dia de internamento e um parâmetro único diário.</Tooltip>}>
+                <OverlayTrigger placement="bottom" overlay={<Tooltip id="button-tooltip-2"> {t("graphs.boxplot.controller.pvalue.help")} </Tooltip>}>
                   <Button style={{marginLeft: '0.3rem'}} variant="outline-dark" className='rounded-circle centered-text-round-button'> i </Button>
                 </OverlayTrigger>
                 : <></> }

@@ -2,14 +2,19 @@ import { useState } from 'react';
 import BarChart from '../bar/BarChart';
 import CircularChart from '../circular/CircularChart';
 import NominalController from './NominalController';
+import { useTranslation } from 'react-i18next';
 
-const graphs = [
-    { label: 'Gráfico barras', value: 'bar' },
-    { label: 'Gráfico circular', value: 'circular' }
-]
 
 export default function NominalChart({ dataState }) {
+    const { t } = useTranslation()
+
+    const graphs = [
+        { label: t("graphs.nominal.controller.graph-type.bar"), value: 'bar' },
+        { label: t("graphs.nominal.controller.graph-type.circular"), value: 'circular' }
+    ]
+
     const [chart, setChart] = useState(graphs[0])
+
     const [controllers, setControllers] = useState({
         selectedWave: [],
         separateWaves: false
@@ -40,7 +45,7 @@ export default function NominalChart({ dataState }) {
             separateWaves: false
         })
     }
-
+    
     return (
         <div>
             <NominalController options={{
@@ -55,7 +60,7 @@ export default function NominalChart({ dataState }) {
                 },
                 waves: { 
                     handler: selectWaveHandler,
-                    options: dataState.data.map((elem, idx) => { return { label: elem.subtitle, value: idx }}),
+                    options: dataState.data.map((elem, idx) => { return { label: `${t("graphs.labels.wave")} ${elem.subtitle}`, value: idx }}),
                     value: controllers.selectedWave
                 }
             }}/>

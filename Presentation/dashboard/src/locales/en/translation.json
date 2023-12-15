@@ -1,0 +1,276 @@
+{
+    "login": "Login",
+    "logout": "Logout",
+    "login-form": {
+        "username-label": "Username",
+        "username-placeholder": "Insert username",
+        "password-label": "Password",
+        "password-placeholder": "Insert password",
+        "login-btn": "Login",
+        "errors": {
+            "credentials": "The credentials are invalid",
+            "server": "Something wrong happened in the server"
+        }
+    },
+    "sidebar": {
+        "homepage": "Homepage",
+        "cross-data": "Cross-Sectional Data",
+        "long-data": "Longitudinal Data",
+        "surv-curves": "Survival Curves",
+        "evol-params": "Parameter Evolution",
+        "export": "Export",
+        "import": "Import",
+        "manage-users": "Manage Users"
+    },
+    "homepage": {
+        "title": "Overview",
+        "nums": {
+            "patients": "# Patients",
+            "collections": "# Collections",
+            "waves": "# Waves"
+        },
+        "graph-titles": {
+            "patients-per-wave": "# Patients per wave",
+            "collections-per-wave": "# Collections per wave"
+        }
+    },
+    "cross-data-form": {
+        "title": "Cross-Sectional Data",
+        "help": {
+            "title": "Graph Types:",
+            "circular": "Circulars/Bars: Selected demography without parameters",
+            "boxplot": "Boxplots: One selected parameter",
+            "scatter": "Scatter: Two selected parameters without demography"
+        },
+        "visualize-btn": "Visualize",
+        "cols-err": "Invalid combination of demography and parameters."
+    },
+    "surv-curves-form": {
+        "title": "Survival Curves",
+        "visualize-btn": "Visualize",
+        "cols-err": "Invalid combination of demography and parameters."
+    },
+    "evol-params-form": {
+        "title": "Parameters Evolution",
+        "visualize-btn": "Visualize",
+        "cols-err": "Invalid parameter values.",
+        "separate-patient-cb": "Separate by patient"
+    },
+    "export-form": {
+        "title": "Export Data",
+        "export-btn": "Export"
+    },
+    "import-form": {
+        "title": "Import Data",
+        "import-btn": "Import"
+    },
+    "manage-users-page": {
+        "title": "User Management",
+        "alerts": {
+            "user": "User",
+            "added": "successfully created!",
+            "deleted": "successfully removed!",
+            "updated": "sucessfully updated!"
+        },
+        "controller": {
+            "search-placeholder": "Search usernames...",
+            "add-user-btn": "+ Add new user"
+        },
+        "table": {
+            "username": "Username",
+            "role": "Role",
+            "state": {
+                "name": "State",
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "action": "Action"
+        },
+        "pagination": "Items per page"
+    },
+    "add-user-form": {
+        "title": "Add new user",
+        "username": "Username",
+        "role": "Role",
+        "state": "State",
+        "add-btn": "Add"
+    },
+    "delete-user-form": {
+        "title": "Remove user",
+        "msg": "Are you sure you want to remove the user",
+        "delete-btn": "Remove"
+    },
+    "update-user-form": {
+        "title": "Update user",
+        "username": "Username",
+        "role": "Role",
+        "state": {
+            "name": "State",
+            "active": "Active",
+            "inactive": "Inactive"
+        },
+        "reset-pwd-cb": "Reset password",
+        "upd-btn": "Update"
+    },
+    "download-img-form": {
+        "title": "Download Image",
+        "download-btn": "Download"
+    },
+    "form-fields": {
+        "patient-ids": {
+            "label": "Patient IDs",
+            "placeholder": "Insert IDs",
+            "help": "e.g. select patients 10 and 15 to 20: 10;15-20",
+            "error": "Invalids IDs"
+        },
+        "parameters": {
+            "label": "Parameters",
+            "daily-params-label": "Daily Single Results (ICU only)",
+            "placeholder": "None selected",
+            "error": "Invalid parameter values",
+            "select-all": "All"
+        },
+        "dates": {
+            "label": "Date interval",
+            "date-begin": "Begin date",
+            "date-begin-error": "Invalid begin date",
+            "date-end": "End date",
+            "date-end-error": "Invalid end date"
+        },
+        "icu-day": {
+            "label": "Day of admission to the ICU",
+            "placeholder": "None selected",
+            "help": "e.g. select ICU days 1 and 3 to 5: 1;3-5",
+            "error": "Invalid days"
+        },
+        "demography": {
+            "label": "Demography",
+            "placeholder": "None selected",
+            "error": "Invalid demography values",
+            "select-all": "All"
+        },
+        "therapy": {
+            "label": "Therapy",
+            "placeholder": "None selected",
+            "error": "Invalid therapy values",
+            "select-all": "All"
+        },
+        "waves": {
+            "label": "Waves",
+            "placeholder": "None selected",
+            "error": "Invalid waves"
+        },
+        "covid": {
+            "covid": "Covid",
+            "no-covid": "No Covid",
+            "both": "Both",
+            "error": "Invalid Covid values."
+        },
+        "cutoff": {
+            "label": "Cutoffs",
+            "placeholder": "Insert cutoffs",
+            "errors": {
+                "format": "Invalid format.",
+                "empty": "A cutoff is required in the presence of a parameter."
+            },
+            "help": {
+                "line1": "Only valid in the presence of parameters.",
+                "line2": "e.g. select cutoff <10 and between 15 and 20: <10;15-20"
+            }
+        },
+        "icu": {
+            "icu": "ICU",
+            "no-icu": "No ICU",
+            "both": "Both",
+            "error": "Invalid ICU value."
+        },
+        "ratio-params": {
+            "error": "Invalid parameter values"
+        }
+    },
+    "graphs": {
+        "nominal": {
+            "controller": {
+                "graph-type": {
+                    "bar": "Bar chart",
+                    "circular": "Circular chart"
+                }
+            },
+            "titles": {
+                "prefix": "Comparison for {{demo}}",
+                "suffix1": "for each wave",
+                "suffix2": "for all waves",
+                "suffix3": "for {{wave}}"
+            }
+        },
+        "boxplot": {
+            "controller": {
+                "pvalue": {
+                    "cb": "Show P values",
+                    "help": "To obtain the P values it is necessary admission day and a daily single parameter."
+                },
+                "outliers": {
+                    "cb": "Hide outliers"
+                }
+            },
+            "titles": {
+                "prefix1": "Comparison of {{analysis}} {{param}}{{units}}",
+                "prefix2": "Comparison of {{analysis}} {{param}}{{units}} for {{demo}}",
+                "suffix1": "for each wave",
+                "suffix2": "for all waves",
+                "suffix3": "for {{wave}}"
+            }
+        },
+        "scatter": {
+            "titles": {
+                "prefix": "Scatterplot between {{param1}} and {{param2}},",
+                "suffix1": "for each wave",
+                "suffix2": "for all waves",
+                "suffix3": "for {{wave}}"
+            }
+        },
+        "surv-curves": {
+            "titles": {
+               "prefix1" : "Survival curves for {{var1}}",
+               "prefix2" : "Survival curves for {{var1}} and for {{var2}}",
+               "suffix1": "in all waves",
+               "suffix2": "in {{wave}}",
+               "suffix3": "for each wave"
+            },
+            "xtitle": "Time in days, since ICU admission",
+            "ytitle": "Survival probability",
+            "table": {
+                "all": "All",
+                "test": "Test"
+            }
+        },
+        "scatter-lines-aggr": {
+            "xtitle": "Time in days, since ICU admission",
+            "titles": {
+                "prefix1": "Evolution of {{param}}",
+                "prefix2": "Evolution of {{analysis}} | {{param}}",
+                "suffix1": "for {{wave}}",
+                "suffix2": "for each wave",
+                "suffix3": "for all waves"
+            }
+        },
+        "scatter-lines-sep": {
+            "xtitle": "Time in days, since ICU admission",
+            "titles": {
+                "prefix1": "Evolution of {{param}}",
+                "prefix2": "Evolution of {{analysis}} | {{param}}",
+                "suffix": "for each patient"
+            }
+        },
+        "labels": {
+            "wave": "Wave"
+        }
+    },
+    "controller-generic": {
+        "wave-placeholder": "Choose Wave",
+        "separate-waves-cb": "Separate by waves"
+    },
+    "plotly-buttons": {
+        "download-img": "Download image"
+    }
+}

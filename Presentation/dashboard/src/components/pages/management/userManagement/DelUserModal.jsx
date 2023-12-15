@@ -3,8 +3,10 @@ import { Modal, Form, Button } from "react-bootstrap";
 import { useFetch } from "../../../../utils/customHooks";
 import { MANAGEMENT_USERS_PATH } from "../../../../utils/paths";
 import MySpinner from "../../../MySpinner";
+import { useTranslation } from "react-i18next";
 
 export default function DelUserModal({ showModal, user, setDelUserState}) {
+    const { t } = useTranslation()
     const [formState, setFormState] = useState({
         url: '',
         username: ''
@@ -52,16 +54,16 @@ export default function DelUserModal({ showModal, user, setDelUserState}) {
     return (
         <Modal show={showModal} backdrop={fetchState.isPending() ? 'static' : 'true'} onHide={handleCloseModal}>
             <Modal.Header closeButton={!fetchState.isPending()} >
-                <Modal.Title>Eliminar utilizador</Modal.Title>
+                <Modal.Title> {t("delete-user-form.title")} </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}>Pretende mesmo eliminar o utilizador <b>{formState.username}</b>?</Form.Label>
+                <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}> {t("delete-user-form.msg")} <b>{formState.username}</b>?</Form.Label>
             </Modal.Body>
             <Modal.Footer style={{justifyContent: 'center'}}>
                 <Button disabled={fetchState.isPending()} className='btn-generic' onClick={handleAcceptModal}>
                     { fetchState.isPending()
                         ? <MySpinner className={'plain-div'} />
-                        : 'Eliminar'
+                        : t("delete-user-form.delete-btn")
                     }
                 </Button>
             </Modal.Footer>

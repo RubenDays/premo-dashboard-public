@@ -62,7 +62,7 @@ export function calculateRowsCols(size, max_cols) {
 
 }
 
-export function generateLayout(mainLayout, graphs, data, masterXTitle, masterYTitle, maxNumCols) {
+export function generateLayout(mainLayout, graphs, subtitles, masterXTitle, masterYTitle, maxNumCols) {
     // set the layout of the plot
     let layout = { ...mainLayout }
     // layout.title = generateTitle(selectedWave, separateWaves)
@@ -77,7 +77,7 @@ export function generateLayout(mainLayout, graphs, data, masterXTitle, masterYTi
         // make subplots' titles
         graphs.forEach((graph, idx) => {
             annotations.push({
-                text: data[idx].subtitle,
+                text: subtitles[idx],
                 annot_name: 'subtitle',
                 font: { size: 13.5 },
                 showarrow: false,
@@ -165,6 +165,10 @@ export function generateNumSamplesAnnotation(graphs, rows, useXName=false) {
  * @returns number with 3 floating points.
  */
 export function testValueDisplayString(v) {
+    if (!v) {
+        return 'NaN'
+    }
+    
     return v < 0.001 ? v.toExponential(3) : v.toFixed(3)
 }
 

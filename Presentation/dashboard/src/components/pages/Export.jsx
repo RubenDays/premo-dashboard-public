@@ -1,24 +1,64 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next'
 
 import { FETCH_ERRORS, useFetch } from '../../utils/customHooks'
 import { EXPORT_PATH } from '../../utils/paths';
 import { isPatientIDsInputValid, isValidDate } from '../../utils/verifications';
 import { FETCH_STATUS } from '../../utils/customHooks';
 import MySpinner from '../MySpinner';
-import { DatesFormGroup, FormTitleGroup, PatientIDsFormGroup } from '../../utils/forms/formComponents';
-import { getErrorCode } from '../../utils/forms/formVerifiers';
+import { DatesFormGroup, DayUciFormGroup, DemographyFormGroup, FormTitleGroup, ParamsFormGroup, PatientIDsFormGroup, TherapyFormGroup } from '../../utils/forms/formComponents';
+import { FormField, getErrorCode, VerifyForms } from '../../utils/forms/formVerifiers';
+import { useOutletContext } from 'react-router-dom';
 
 
 export default function Export() {
+    const [ctx] = useOutletContext()
+    const { t } = useTranslation()
+
     const dateBeginRef = useRef()
     const dateEndRef = useRef()
+
+    const [initFormState, setInitFormState] = useState({
+        params: [],
+        demography: [],
+        daily_params: [],
+        therapy: []
+    })
+
+    useEffect(() => {
+        const init_data = ctx.data.init_form_data
+
+        const params = init_data.params.map(param => (
+            { value: param.value, label: param.display_name }
+        ))
+
+        const demography = init_data.demography.map(demo => (
+            { value: demo.value, label: demo.display_name }
+        ))
+
+        const daily_params = init_data.daily_params.map(daily_param => (
+            { value: daily_param.value, label: daily_param.display_name }
+        ))
+
+        const therapy = init_data.therapy.map(t => (
+            { value: t, label: t }
+        ))
+
+        setInitFormState({params, demography, daily_params, therapy})
+
+    }, [])
 
     const [formState, setFormState] = useState({
         err: 0,
         url: '',
         contents: {
-            patientIDs: undefined
+            patientIDs: undefined,
+            params: [],
+            demography: [],
+            therapy: [],
+            resDaily: false,
+            dayUci: undefined
         }
     })
     
@@ -45,67 +85,45 @@ export default function Export() {
     function exportOnClickHandler(ev) {
         ev.preventDefault() // prevents page reload
 
-        const queryParts = []
+        const formsToVerify = [
+            FormField.PATIENT_IDS,
+            FormField.DATES,
+            FormField.DEMOGRAPHY,
+            FormField.PARAMS,
+            FormField.RES_DAILY,
+            FormField.THERAPY,
+            FormField.DAY_UCI,
+        ]
 
-        let err = 0
-
-        // final verification for patient IDs input
-        if (formState.contents.patientIDs) {
-            // if patientIDs input is not valid, mark with error
-            if (!isPatientIDsInputValid(formState.contents.patientIDs)) {
-                err = 1
-            } else {
-            // else construct the query string
-                queryParts.push(`patient_ids=${formState.contents.patientIDs.trim()}`)
-            }
+        const formValues = { ...formState.contents}
+        formValues.dates = {
+            dateBegin: dateBeginRef.current.value,
+            dateEnd: dateEndRef.current.value
+        }
+        formValues.demography = {
+            demo: formState.contents.demography,
+            validOptions: initFormState.demography
+        }
+        formValues.therapy = {
+            t: formState.contents.therapy,
+            validOptions: initFormState.therapy
+        }
+        formValues.parameters = {
+            params: formState.contents.params,
+            validOptions: formState.contents.resDaily ? initFormState.daily_params : initFormState.params
         }
 
-        // final verification of date begin input
-        if (dateBeginRef.current.value) {
-            if (!isValidDate(dateBeginRef.current.value)) {
-                 // date begin error          
-                 err += 2
-            }
-            queryParts.push(`begin_date=${dateBeginRef.current.value}`)
-        }
+        const verified = VerifyForms(formsToVerify, formValues)
 
-        // final verification of date end input
-        if (dateEndRef.current.value) {
-            if (!isValidDate(dateEndRef.current.value)) {
-                 // date end error
-                 err += 4
-            }
-            queryParts.push(`end_date=${dateEndRef.current.value}`)
-        }
-
-        // if both dates are valid, check if "begin" is before "end"
-        // if both dates didn't result in error
-        if (err < 2) {
-            // if both have values
-            if (dateBeginRef.current.value && dateEndRef.current.value) {
-                const dateBegin = Date.parse(dateBeginRef.current.value)
-                const dateEnd = Date.parse(dateEndRef.current.value)
-                // if "date begin" is bigger than "date end"
-                if (dateBegin > dateEnd) {
-                    // error from both dates (4+2)
-                    err += 6
-                }
-            }
-        }
-
-        let queryStr = EXPORT_PATH
-        if (queryParts.length > 0) {
-            queryStr += `?${queryParts.join('&')}`
-        }
-        
         let newState = { ...formState }
-        if (err === 0) {           
+        if (verified.err === 0) {           
             newState.err = 0
-            newState.url = queryStr
+            newState.url = EXPORT_PATH + verified.queryStr
         } else {
-            newState.err = err
+            newState.err = verified.err
             newState.url = ''            
         }
+
         setFormState(newState)
     }
 
@@ -117,21 +135,82 @@ export default function Export() {
         setFormState(newState)
     }
 
+    function onChangeResDaily(ev) {
+        let newState = { ...formState }
+        newState.contents.resDaily = !newState.contents.resDaily
+        newState.contents.params = []
+        newState.contents.daily_params = []
+        setFormState(newState)
+    }
+
+    function onSelectParams(values) {
+        let newState = {...formState}
+        newState.contents.params = values
+        return setFormState(newState)
+    }
+
+    function onSelectDemography(values) {
+        let newState = {...formState}
+        newState.contents.demography = values
+        return setFormState(newState)
+    }
+
+    function onSelectTherapy(values) {
+        let newState = {...formState}
+        newState.contents.therapy = values
+        return setFormState(newState)
+    }
+
+    function setDayUci(value, err) {
+        let newState = { ...formState }
+        newState.contents.dayUci = value
+        newState.url = ''
+        newState.err = err
+        setFormState(newState)
+    }
+
     return (
-        <div style={{ alignItems: 'center', justifyContent: 'center', display:'flex'}}>           
+        <div className='export-form'>
             <Form noValidate onSubmit={exportOnClickHandler}>
 
-                <FormTitleGroup title='Export Dados' />
+                <FormTitleGroup title={t("export-form.title")} />
 
                 <PatientIDsFormGroup err={formState.err} setPatientIds={setPatientIds} />
 
                 <DatesFormGroup err={formState.err} dateBeginRef={dateBeginRef} dateEndRef={dateEndRef} />
 
+                <DayUciFormGroup err={formState.err} setDayUci={setDayUci} />
+
+                <DemographyFormGroup 
+                    err={formState.err} 
+                    values={formState.contents.demography}
+                    options={initFormState.demography}
+                    onSelectDemography={onSelectDemography}
+                    selectAll={t("form-fields.demography.select-all")}
+                />
+
+                <ParamsFormGroup 
+                    err={formState.err} 
+                    values={formState.contents.params}
+                    options={formState.contents.resDaily ? initFormState.daily_params : initFormState.params}
+                    onSelectParams={onSelectParams}
+                    onChangeResDaily={onChangeResDaily}
+                    selectAll={t("form-fields.parameters.select-all")}
+                />
+
+                <TherapyFormGroup 
+                    err={formState.err} 
+                    values={formState.contents.therapy}
+                    options={initFormState.therapy}
+                    onSelectTherapy={onSelectTherapy}
+                    selectAll={t("form-fields.therapy.select-all")}
+                />
+
                 <Form.Group className='centered-btn-grp'>
                     <Button variant="generic" type="submit" >
                         { fetchState.status === FETCH_STATUS.PENDING 
                             ?   <MySpinner className={'plain-spinner'}/>
-                            :   'Exportar'
+                            :   t("export-form.export-btn")
                         }
                     </Button>
                 </Form.Group>

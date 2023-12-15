@@ -7,6 +7,7 @@ import { MANAGEMENT_USERS_PATH } from "../../../../utils/paths";
 import { verifyUsername } from "../../../../utils/verifications";
 import MySpinner from "../../../MySpinner";
 import SelectCheckBox from "../../../SelectCheckBox";
+import { useTranslation } from "react-i18next";
 
 
 const USERNAME_ERROR = 1
@@ -20,11 +21,6 @@ const ERRORS = {
     role: ROLE_ERROR,
     reset_pwd: RESET_PWD_ERROR
 }
-
-const STATUS_OPTS = [
-    {label: 'Ativo', value: true},
-    {label: 'Desativo', value: false}
-]
 
 const ROLES = ['admin', 'user']
 const ROLES_OPTS = ROLES.map(role => { return {
@@ -44,7 +40,13 @@ const DEFAULT_FORM_STATE = {
 }
 
 export default function UpdUserModal({ showModal, user, setUpdUserState}) {
+    const { t } = useTranslation()
     const [formState, setFormState] = useState(DEFAULT_FORM_STATE)
+
+    const STATUS_OPTS = [
+        {label: t("update-user-form.state.active"), value: true},
+        {label: t("update-user-form.state.inactive"), value: false}
+    ]
 
     const fetchState = useFetch(formState.url, { 
         method: 'PUT',
@@ -53,8 +55,7 @@ export default function UpdUserModal({ showModal, user, setUpdUserState}) {
             username: formState.form.username,
             enabled: formState.form.enabled ? formState.form.enabled.value : undefined,
             role: formState.form.role ? formState.form.role.value : undefined,
-            reset_pwd: formState.form.resetPwd,
-
+            reset_pwd: formState.form.resetPwd
         })
     })
 
@@ -156,14 +157,14 @@ export default function UpdUserModal({ showModal, user, setUpdUserState}) {
     return (
         <Modal show={showModal} backdrop={fetchState.isPending() ? 'static' : 'true'} onHide={handleCloseModal}>
             <Modal.Header closeButton={!fetchState.isPending()} >
-                <Modal.Title>Atualizar utilizador</Modal.Title>
+                <Modal.Title> {t("update-user-form.title")} </Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
 
                 {/* username */}
                 <InputGroup className="mb-3">
-                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}>Nome utilizador</Form.Label>
+                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}> {t("update-user-form.username")} </Form.Label>
                     <Form.Control 
                         disabled
                         defaultValue={user.username}
@@ -174,7 +175,7 @@ export default function UpdUserModal({ showModal, user, setUpdUserState}) {
 
                 {/* role */}
                 <InputGroup className="mb-3">
-                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}>Papel</Form.Label>
+                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}> {t("update-user-form.role")} </Form.Label>
                     <SelectCheckBox
                         className={'basic-single'}
                         value={[formState.form.role]}
@@ -185,7 +186,7 @@ export default function UpdUserModal({ showModal, user, setUpdUserState}) {
 
                 {/* status */}
                 <InputGroup className="mb-3">
-                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}>Estado</Form.Label>
+                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}> {t("update-user-form.state.name")} </Form.Label>
                     <SelectCheckBox
                         className={'basic-single'}
                         value={[formState.form.enabled]}
@@ -200,7 +201,7 @@ export default function UpdUserModal({ showModal, user, setUpdUserState}) {
                         style={{fontSize: '15px'}}
                         type='checkbox'
                         id='cb-min-max-res'
-                        label='Reiniciar senha' 
+                        label={t("update-user-form.reset-pwd-cb")}
                         onChange={toggleResetPwd} 
                     />
                 </Form.Group>
@@ -211,7 +212,7 @@ export default function UpdUserModal({ showModal, user, setUpdUserState}) {
                 <Button disabled={formState.err !== 0 || fetchState.isPending()} className='btn-generic' onClick={handleAcceptModal}>
                     { fetchState.isPending() 
                         ? <MySpinner className={'plain-div'} />
-                        : 'Atualizar'
+                        : t("update-user-form.upd-btn")
                     }
                 </Button>
             </Modal.Footer>

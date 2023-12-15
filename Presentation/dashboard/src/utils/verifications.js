@@ -20,9 +20,45 @@ function isValidID(val) {
 }
 
 export function isValidDayUci(val) {
-    if (!val) return true
+    if (!val) return false
     if (! /^-?\d+$/.test(val)) return false
     return parseInt(val) >= 1
+}
+
+function isDayUciValid(value) {
+    if (!value) return false
+
+    if (value.includes('-')) {
+        const valueParts = value.split('-')
+
+        // if it's not of with format 'x-y'
+        if (valueParts.length !== 2) return false
+
+        // if both aren't numbers
+        if (!isValidDayUci(valueParts[0]) || !isValidDayUci(valueParts[1])) return false            
+
+        // if starting ID is lower than ending ID
+        if (parseInt(valueParts[0]) > parseInt(valueParts[1])) return false
+
+        return true
+    } else {
+        return isValidDayUci(value)
+    }
+}
+
+export function verifyDayUcisInput(input) {
+    if (!input) return true
+
+    const values = input.replace(/\s/g, '')
+    if (values.length > 0) {
+        // separate with ';' and remove empty strings
+        const values_parts = values.split(';').filter(elem => elem)
+
+        // checks if every element returns true from 'validPatientIDInput'
+        return values_parts.every(elem => isDayUciValid(elem))
+    }
+
+    return true
 }
 
 /**

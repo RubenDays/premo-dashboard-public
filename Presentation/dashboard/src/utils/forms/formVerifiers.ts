@@ -1,5 +1,5 @@
-import { isCutoffInputValid, isInt, isPatientIDsInputValid, isValidDate, isValidDayUci } from "../verifications"
-import { COVID_ERR, CUTOFF_ERR, DATE_BEGIN_ERR, DATE_END_ERR, DAY_UCI_ERR, DEMO_ERR, ERROR_FIELDS, PARAMS_ERR, PATIENT_IDS_ERR, UCI_ERR, WAVES_ERR } from "./formCodeErrors"
+import { isCutoffInputValid, isInt, isPatientIDsInputValid, isValidDate, verifyDayUcisInput } from "../verifications"
+import { COVID_ERR, CUTOFF_ERR, DATE_BEGIN_ERR, DATE_END_ERR, DAY_UCI_ERR, DEMO_ERR, ERROR_FIELDS, PARAMS_ERR, PATIENT_IDS_ERR, RATIO_PARAM_ERR, THERAPY_ERR, UCI_ERR, WAVES_ERR } from "./formCodeErrors"
 import { Option } from '../types'
 
 export enum FormField {
@@ -14,6 +14,8 @@ export enum FormField {
     DAY_UCI,
     RES_DAILY,
     SEPARATE_PACIENTS,
+    THERAPY,
+    RATIO_PARAM,
 }
 
 type PatientIDsInput = undefined | string
@@ -36,6 +38,14 @@ type ParamsInput = {
 }
 type CutoffsInput = undefined | string
 type SeparatePacientsInput = boolean
+type TherapyInput = {
+    t: Array<Option>,
+    validOptions: Array<Option>
+}
+type RatioParamsInput = {
+    selected: Array<Option>
+    validOptions: Array<Option>
+}
 
 const formFieldVerifiers = {
     [FormField.PATIENT_IDS]: (formValues: { patientIDs: PatientIDsInput; }) => verifyPatientIDS(formValues.patientIDs),
@@ -49,6 +59,8 @@ const formFieldVerifiers = {
     [FormField.DAY_UCI]: (formValues: { dayUci: DayUciInput; }) => verifyDayUci(formValues.dayUci),
     [FormField.RES_DAILY]: (formValues: { resDaily: ResDailyInput; }) => verifyResDaily(formValues.resDaily),
     [FormField.SEPARATE_PACIENTS]: (formValues: { separatePatients: SeparatePacientsInput; }) => verifySeparatePacients(formValues.separatePatients),
+    [FormField.THERAPY] : (formValues : { therapy: TherapyInput; }) => verifyTherapy(formValues.therapy),
+    [FormField.RATIO_PARAM] : (formValues: { ratioParams: RatioParamsInput }) => verifyRatioParams(formValues.ratioParams)
 }
 
 export function VerifyForms(fields: Array<FormField>, formState: any) {
@@ -96,7 +108,7 @@ function verifyDayUci(dayUci: DayUciInput) {
     // verification for patient IDs input
     if (dayUci) {
         // if patientIDs input is not valid, mark with error
-        if (!isValidDayUci(dayUci)) {
+        if (!verifyDayUcisInput(dayUci)) {
             err = DAY_UCI_ERR
         } else {
             // else construct the query string
@@ -236,6 +248,24 @@ function verifyDemography(demography: DemographyInput) {
     }
 }
 
+function verifyTherapy(therapy: TherapyInput) {
+    let err = 0
+    let queryPart = ''
+
+    if (therapy.t.length > 0) {
+        if (therapy.t.every(e => therapy.validOptions.includes(e))) {
+            queryPart = `therapy=${therapy.t.map(e => e.value).join(',').replace(/(\+)/g, "%2B")}`
+        } else {
+            err += THERAPY_ERR
+        }
+    }
+
+    return {
+        err: err,
+        queryStrPart: [queryPart]
+    }
+}
+
 function verifyParams(parameters: ParamsInput) {
     let err = 0
     let queryPart = ''
@@ -246,6 +276,41 @@ function verifyParams(parameters: ParamsInput) {
             queryPart = `params=${parameters.params.map(e => e.value).join(',')}`
         } else {
             err += PARAMS_ERR
+        }
+    }
+
+    return {
+        err: err,
+        queryStrPart: [queryPart]
+    }
+}
+
+function verifyRatioParams(ratioParams: RatioParamsInput) {
+    let err = 0
+    let queryPart = ''
+
+    // final verification for ratio params
+    if (ratioParams.selected.length > 0 && ratioParams.selected.length % 2 == 0) {
+        const filtered = ratioParams.selected.filter(elem => elem != undefined)
+        if (filtered.every(elem => ratioParams.validOptions.map(e => e.value).includes(elem.value))) {
+            queryPart = `ratio_params=`
+            const parts = []
+            for (let i = 0; i <= ratioParams.selected.length; i+=2) {
+                const dividend = ratioParams.selected[i]
+                const divisor = ratioParams.selected[i+1]
+                if (dividend && divisor) {
+                    parts.push(`${dividend.value}|${divisor.value}`)
+                } else if (!dividend && !divisor) {
+                    continue
+                } else {
+                    err += RATIO_PARAM_ERR
+                    queryPart = ''
+                    break
+                }
+            }
+            queryPart += parts.join(',')
+        } else {
+            err += RATIO_PARAM_ERR
         }
     }
 

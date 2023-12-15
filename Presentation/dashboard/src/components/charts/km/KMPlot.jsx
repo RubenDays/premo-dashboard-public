@@ -1,3 +1,4 @@
+import { t } from 'i18next';
 import { useEffect, useState } from 'react';
 import { Container, Row, Table } from 'react-bootstrap';
 import Plot from 'react-plotly.js';
@@ -6,6 +7,7 @@ import { calculateRowsCols, generateLayout, generateNumSamplesAnnotation } from 
 import MyPlot from '../MyPlot';
 import { DEFAULT_CONFIG, DEFAULT_LAYOUT, getDefaultConfig, getDefaultLayout } from '../plotDefaults';
 import KMPlotController from './KMPlotController';
+import { useTranslation, getI18n } from 'react-i18next';
 
 
 const MAX_NUM_COLS = 3
@@ -18,6 +20,8 @@ const DEFAULT_COLORS = ['rgb(31, 119, 180)', 'rgb(255, 127, 14)',
 
 
 export default function KMPlot({ dataState }) {
+    const { t } = useTranslation()
+
     const [chartState, setChartState] = useState({
         // contains data information and plot layout
         chartData: {
@@ -31,11 +35,18 @@ export default function KMPlot({ dataState }) {
             selectedWave: [], // indicates the currently selected wave. nothing means all
             separateWaves: false,
         },
+        labels: {
+            subtitles: []
+        }
     })
 
     useEffect(() => {
         let graphs = []
         const selectedWave = chartState.controllers.selectedWave
+        
+        let newState = { ...chartState }
+        newState.labels.subtitles = dataState.waves_km_data.map(elem => { return `${t("graphs.labels.wave")} ${elem.subtitle}`})
+
         if (selectedWave.length > 0) {
             graphs = create_km_plot(dataState.waves_km_data[selectedWave[0].value])
         } else if (chartState.controllers.separateWaves) {
@@ -45,7 +56,8 @@ export default function KMPlot({ dataState }) {
         }
 
         // make confidence intervals, if there's only 1 line
-        /*if (data.length === 1) {
+        /*
+        if (data.length === 1) {
             const ci = dataState.data.km_data[0].confidence_interval
             data.push({
                 x: ci.timeline,
@@ -69,9 +81,8 @@ export default function KMPlot({ dataState }) {
                 type: "scatter",
                 legendgroup: dataState.data.km_data[0].title
             })
-        }*/
-
-        let newState = { ...chartState }
+        }
+        */
 
         // set data
         newState.chartData.data = graphs
@@ -80,7 +91,7 @@ export default function KMPlot({ dataState }) {
         newState.chartData.layout = internalGenerateLayout(graphs, selectedWave, chartState.controllers.separateWaves)
 
         setChartState(newState)
-    }, [dataState])
+    }, [dataState, getI18n().language])
 
     function selectWaveHandler(values) {
         let newState = { ...chartState }
@@ -102,24 +113,23 @@ export default function KMPlot({ dataState }) {
     }
 
     function generateTitle(selectedWave, separateWaves) {
-        const prefix = 'Curvas de sobrevivência'
         let suffix = ''
         if (selectedWave.length > 0) {
-            suffix = `na ${selectedWave[0].label}`
+            suffix = t("graphs.surv-curves.titles.suffix2", { wave: selectedWave[0].label })
         } else if (separateWaves) {
-            suffix = `em cada vaga`
+            suffix = t("graphs.surv-curves.titles.suffix3")
         } else {
-            suffix = 'em todas as vagas'
+            suffix = t("graphs.surv-curves.titles.suffix1")
         }
     
         const demo = dataState.demography
         const param = dataState.param
         if (demo && param.paramName) {
-            return `${prefix} por ${demo} e por ${param.paramName} ${param.units ? param.units + " " : ""}${suffix}`
+            return `${t("graphs.surv-curves.titles.prefix2", { var1: demo, var2:  param.paramName })} ${param.units ? param.units + " " : ""}${suffix}`
         } else if (param.paramName) {
-            return `${prefix} por ${param.paramName} ${param.units ? param.units + " " : ""}${suffix}`
+            return `${t("graphs.surv-curves.titles.prefix1", { var1: param.paramName })} ${param.units ? param.units + " " : ""}${suffix}`
         } else if (demo) {
-            return `${prefix} por ${demo} ${suffix}`
+            return `${t("graphs.surv-curves.titles.prefix1", { var1: demo })} ${suffix}`
         }
         return ''
     }
@@ -128,9 +138,9 @@ export default function KMPlot({ dataState }) {
         let layout = generateLayout(
             chartState.chartData.layout,
             graphs,
-            dataState.waves_km_data,
-            'Tempo em dias, desde a adminssão na UCI',
-            'Probabilidade de sobrevivência',
+            chartState.labels.subtitles,
+            t("graphs.surv-curves.xtitle"),
+            t("graphs.surv-curves.ytitle"),
             MAX_NUM_COLS
         )
 
@@ -168,7 +178,7 @@ export default function KMPlot({ dataState }) {
                     options={{
                         waves: { 
                             handler: selectWaveHandler,
-                            options: dataState.waves_km_data.map((elem, idx) => { return { label: elem.subtitle, value: idx }}),
+                            options: dataState.waves_km_data.map((elem, idx) => { return { label: `${t("graphs.labels.wave")} ${elem.subtitle}`, value: idx }}),
                             value: chartState.controllers.selectedWave
                         },
                         separateWaves: { 
@@ -190,13 +200,13 @@ export default function KMPlot({ dataState }) {
                     <thead>
                         <tr>
                             <th />
-                            <th> Todos </th>
+                            <th> {t("graphs.surv-curves.table.all")} </th>
                             {dataState.waves_km_data.map(km_data => { return <th key={`th_${km_data.subtitle}`}> {km_data.subtitle} </th>})}
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td> <b>Teste </b> </td>
+                            <td> <b> {t("graphs.surv-curves.table.test")} </b> </td>
                             <td> <b><i> P Value </i></b> </td>
                             {dataState.waves_km_data.map(km_data => { return <td key={`pval_${km_data.subtitle}`}> <b><i>P Value</i></b> </td> })}
                         </tr>

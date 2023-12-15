@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Row, Container  } from 'react-bootstrap';
 import MyPlot from '../MyPlot';
 import { getDefaultConfig, getDefaultLayout } from '../plotDefaults';
+import { useTranslation, getI18n } from 'react-i18next';
 
 
 const MAX_NUM_COLS = 3
 
 export default function ScatterLinePlotly({ dataState }) {
+    const { t } = useTranslation()
     const [chartState, setChartState] = useState({
         chartData: {
             data: [],
@@ -38,15 +40,25 @@ export default function ScatterLinePlotly({ dataState }) {
         newState.chartData.layout = generateLayout()
 
         setChartState(newState)
-
-    }, [dataState])
+    }, [dataState, getI18n().language])
 
     function generateLayout() {
         // set the layout of the plot
         let layout = { ...chartState.chartData.layout }
-        layout.title = `Evolução do nível de ${dataState.param.analysisName} | ${dataState.param.paramName} ${dataState.param.units ? dataState.param.units + ' ' : ''}por paciente`
-        layout.xaxis.title.text = 'Tempo em dias, desde a adminssão na UCI'
-        layout.yaxis.title.text = `${dataState.param.paramName} ${dataState.param.units ? dataState.param.units : ''}`
+
+        const label = dataState.param
+        let prefix = ''
+        if (label.analysis_name) {
+            prefix = `${t("graphs.scatter-lines-sep.titles.prefix2", { analysis: label.analysis_name, param: label.param_name })}${label.units ? ' ' + label.units : ''}`
+        } else {
+            prefix = `${t("graphs.scatter-lines-sep.titles.prefix1", { param: label.param_name })}${label.units ? ' ' + label.units : ''}`
+        }
+
+        console.log(prefix)
+
+        layout.title = `${prefix} ${t("graphs.scatter-lines-sep.titles.suffix")}`
+        layout.xaxis.title.text = t("graphs.scatter-lines-sep.xtitle")
+        layout.yaxis.title.text = `${dataState.param.param_name} ${dataState.param.units ? dataState.param.units : ''}`
 
         return layout
     }

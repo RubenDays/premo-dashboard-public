@@ -1,12 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next'
+
 import { COLS_ERR, OK } from '../../../../utils/forms/formCodeErrors';
-import { UciFormGroup, ParamsFormGroup, CovidFormGroup, WaveFormGroup, PatientIDsFormGroup, DatesFormGroup, DemographyFormGroup, isColsErr, DayUciFormGroup, FormTitleGroup, COVID_OPTS, UCI_OPTS } from '../../../../utils/forms/formComponents';
+import { UciFormGroup, ParamsFormGroup, CovidFormGroup, WaveFormGroup, PatientIDsFormGroup, DatesFormGroup, DemographyFormGroup, isColsErr, DayUciFormGroup, FormTitleGroup, COVID_OPTS, UCI_OPTS, FormRatioParams } from '../../../../utils/forms/formComponents';
 import { FormField, VerifyForms } from '../../../../utils/forms/formVerifiers';
 import { BOXPLOT_PATH, NOMINAL_VALS_PATH, QUANT_VALS_PATH  } from '../../../../utils/paths';
 
+const MAX_RATIO_ALLOWED = 2
+
+function createEmptyArray(size) {
+    let arr = Array(size)
+    for (let i; i < size; i++) {
+        arr[i] = []
+    }
+
+    return arr
+}
 
 export default function VisualizeStatsForm({ initDataForm, formRequest, setFormRequest }) {
+    const { t } = useTranslation()
+    
     const dateBeginRef = useRef()
     const dateEndRef = useRef()
 
@@ -49,7 +63,11 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
             demography: [],
             params: [],
             resDaily: false,
-            dayUci: ''
+            dayUci: '',
+            paramsRatio: {
+                params: createEmptyArray(MAX_RATIO_ALLOWED * 2),
+                maxAllowed: MAX_RATIO_ALLOWED
+            }
         }
     })
 
@@ -66,6 +84,7 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
             FormField.DEMOGRAPHY,
             FormField.PARAMS,
             FormField.RES_DAILY,
+            FormField.RATIO_PARAM
         ]
 
         const formValues = { ...formState.contents}
@@ -81,6 +100,10 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
             params: formState.contents.params,
             validOptions: formState.contents.resDaily ? initFormState.daily_params : initFormState.params
         }
+        formValues.ratioParams = {
+            selected: formState.contents.paramsRatio.params.map(elem => elem ? elem[0] : undefined),
+            validOptions: formState.contents.resDaily ? initFormState.daily_params : initFormState.params
+        }
         const verified = VerifyForms(formsToVerify, formValues)
 
         let newState = { ...formState }
@@ -90,20 +113,25 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
 
         let url = ''
         let graph_type = ''
+        // params count as 2, because to form a ratio param it's required 2 params
+        const paramsLen = params.length * 2 + formState.contents.paramsRatio.params.filter(elem => elem.length != 0).length
+        console.log(paramsLen)
+        console.log(formState)
+
         // Nominal graphs (e.g. circular) - Only 1 demography selected and no params
-        if (demo.length == 1 && params.length == 0) {
+        if (demo.length == 1 && paramsLen == 0) {
             url = NOMINAL_VALS_PATH + verified.queryStr
             graph_type = 'nominal'
         // Nominal-Quantitative graphs (e.g. boxplot/bars) - Only 1 demography and 1 param, or only 1 param
-        } else if ((demo.length == 1 && params.length == 1) ||
-         (demo.length == 0 && params.length == 1)) {
+        } else if ((demo.length == 1 && paramsLen == 2) ||
+         (demo.length == 0 && paramsLen == 2)) {
             url = BOXPLOT_PATH + verified.queryStr
             graph_type = 'nominal-quant'
             if (!formState.contents.resDaily || !formState.contents.dayUci) {
                 disablePVals = true
             }
         // Quantitative graphs (e.g. scatterplot) - 2 params and no demography
-        } else if (demo.length == 0 && params.length == 2) {
+        } else if (demo.length == 0 && paramsLen == 4) {
             url = QUANT_VALS_PATH + verified.queryStr
             graph_type = 'quant' 
         } else {
@@ -139,6 +167,19 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
     function onSelectParams(values) {
         let newState = {...formState}
         newState.contents.params = values
+        const maxAllowed = MAX_RATIO_ALLOWED - values.length
+
+        if (maxAllowed >= newState.contents.paramsRatio.maxAllowed) {
+            console.log('oi')
+            for (let i = 0; i < maxAllowed - newState.contents.paramsRatio.maxAllowed; i++) {
+                newState.contents.paramsRatio.params.push([])
+                newState.contents.paramsRatio.params.push([])
+            }
+        } else {
+            newState.contents.paramsRatio.params = newState.contents.paramsRatio.params.slice(0, -2)
+        }
+
+        newState.contents.paramsRatio.maxAllowed = maxAllowed
         return setFormState(newState)
     }
 
@@ -177,17 +218,35 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
     }
 
     function setDayUci(value, err) {
-         let newState = { ...formState }
+        let newState = { ...formState }
         newState.contents.dayUci = value
         newState.url = ''
         newState.err = err
         setFormState(newState)
     }
 
+    function onChangeRatioParams(value, index) {
+        let newState = { ...formState }
+        
+        if (value.length > 0) {
+            newState.contents.paramsRatio.params[index] = value
+            const count = newState.contents.paramsRatio.params.filter(p => p.length != 0).length
+            console.log(count)
+
+            if (count + (newState.contents.params.length * 2) > MAX_RATIO_ALLOWED * 2) {
+                newState.contents.params = newState.contents.params.slice(0, -1)
+                newState.contents.paramsRatio.maxAllowed++
+            }
+        } else {
+            newState.contents.paramsRatio.params[index] = []
+        }
+
+        setFormState(newState)
+    }
+
     return (
         <div>
-
-            <FormTitleGroup title='Dados Transversais' helpMsg={graphHelp()} />
+            <FormTitleGroup title={t("cross-data-form.title")} helpMsg={graphHelp(t)} />
 
             <Form noValidate onSubmit={onSubmitHandler}>
 
@@ -208,16 +267,16 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
 
                 <UciFormGroup err={formRequest.err} onChangeCovid={onChangeUci} />
 
-                {isColsErr(formRequest.err) ? <Form.Label className='error-text'> Combinação inválida de demografia e parâmetros. </Form.Label> : <></>}
+                {isColsErr(formRequest.err) ? <Form.Label className='error-text'> {t("cross-data-form.cols-err")} </Form.Label> : <></>}
 
-                <DemographyFormGroup 
+                <DemographyFormGroup
                     err={formRequest.err}
                     values={formState.contents.demography}
                     options={initFormState.demography}
                     onSelectDemography={onSelectDemography}
                 />
 
-                <ParamsFormGroup 
+                <ParamsFormGroup
                     err={formRequest.err}
                     maxSelected={2}
                     values={formState.contents.params}
@@ -225,11 +284,19 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
                     onSelectParams={onSelectParams}
                     onChangeResDaily={onChangeResDaily}
                 />
+
+                <FormRatioParams
+                    err={formRequest.err}
+                    selected={formState.contents.paramsRatio.params}
+                    options={formState.contents.resDaily ? initFormState.daily_params : initFormState.params}
+                    maxAllowed={formState.contents.paramsRatio.maxAllowed}
+                    onChangeRatioParams={onChangeRatioParams}
+                />
                 
                 {/*Visualizar button*/}
                 <Form.Group className='centered-btn-grp'>
                     <Button type="submit" className='btn-generic'>
-                        Visualizar
+                        {t("cross-data-form.visualize-btn")}
                     </Button>
                 </Form.Group>
 
@@ -238,14 +305,14 @@ export default function VisualizeStatsForm({ initDataForm, formRequest, setFormR
     )
 }
 
-function graphHelp() {
+function graphHelp(t) {
     return (
         <div>
-            Tipos de gráficos:<br />
+            {t("cross-data-form.help.title")}<br />
             <ul>
-                <li>Circulares: Demografia selecionada sem parâmetros</li>
-                <li>Boxplots: Um parâmetro selecionado</li>
-                <li>Dispersão: Dois parâmetros selecionados sem demografia</li>
+                <li>{t("cross-data-form.help.circular")}</li>
+                <li>{t("cross-data-form.help.boxplot")}</li>
+                <li>{t("cross-data-form.help.scatter")}</li>
             </ul>
         </div>
     )

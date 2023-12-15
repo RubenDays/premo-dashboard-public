@@ -6,6 +6,8 @@ import { addError, removeError } from "../../../../utils/funcs";
 import { MANAGEMENT_USERS_PATH } from "../../../../utils/paths";
 import MySpinner from "../../../MySpinner";
 import SelectCheckBox from "../../../SelectCheckBox";
+import { useTranslation } from "react-i18next";
+
 
 const STATUS_OPTS = [
     {label: 'Ativo', value: true},
@@ -35,6 +37,8 @@ const ERRORS = {
 }
 
 export default function AddUserModal({ showModal, setAddUserState }) {
+    const { t } = useTranslation()
+
     const [formState, setFormState] = useState(getDefaultFormState())
     const fetchState = useFetch(formState.url, { 
         method: 'POST',
@@ -129,11 +133,11 @@ export default function AddUserModal({ showModal, setAddUserState }) {
     return (
         <Modal show={showModal} onHide={handleCloseModal} backdrop={fetchState.isPending() ? 'static' : 'true'} >
             <Modal.Header closeButton={!fetchState.isPending()}>
-                <Modal.Title>Adicionar novo utilizador</Modal.Title>
+                <Modal.Title> {t("add-user-form.title")} </Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <InputGroup className="mb-3">
-                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}>Nome utilizador</Form.Label>
+                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}> {t("add-user-form.username")} </Form.Label>
                     <Form.Control 
                         defaultValue={formState.form.username}
                         onChange={onChangeUsername}
@@ -143,7 +147,7 @@ export default function AddUserModal({ showModal, setAddUserState }) {
                     />
                 </InputGroup>
                 <InputGroup className="mb-3">
-                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}>Papel</Form.Label>
+                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}> {t("add-user-form.role")} </Form.Label>
                     <SelectCheckBox
                         isDisabled
                         className={'basic-single'}
@@ -153,7 +157,7 @@ export default function AddUserModal({ showModal, setAddUserState }) {
                     />
                 </InputGroup>
                 <InputGroup className="mb-3">
-                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}>Estado</Form.Label>
+                    <Form.Label style={{paddingTop: '0.3rem', paddingRight: '0.5rem'}}> {t("add-user-form.state")} </Form.Label>
                     <SelectCheckBox
                         className={'basic-single'}
                         value={[formState.form.enabled]}
@@ -166,7 +170,7 @@ export default function AddUserModal({ showModal, setAddUserState }) {
                 <Button disabled={!formState.form.username || formState.err !== 0 || fetchState.isPending()} className='btn-generic' onClick={handleAcceptModal}>
                     { fetchState.isPending() 
                         ? <MySpinner className={'plain-div'} />
-                        : 'Adicionar'
+                        : t("add-user-form.add-btn")
                     }
                 </Button>
             </Modal.Footer>

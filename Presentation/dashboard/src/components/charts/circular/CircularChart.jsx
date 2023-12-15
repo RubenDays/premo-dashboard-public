@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Container  } from 'react-bootstrap';
 import { calculateRowsCols } from '../../../utils/funcs';
-import CircularChartController from './CircularChartController';
 import { getDefaultConfig, getDefaultLayout } from '../plotDefaults';
 import MyPlot from '../MyPlot';
+import { useTranslation, getI18n } from 'react-i18next';
 
 const MAX_NUM_COLS = 3
 
 export default function CircularChart({ dataState, controllers }) {
+    const { t } = useTranslation()
     const [chartState, setChartState] = useState({
         chartData: {
             data: [],
@@ -20,7 +21,8 @@ export default function CircularChart({ dataState, controllers }) {
         let graphs = []
 
         if (controllers.separateWaves) {
-            graphs = separateWaves(dataState.data, dataState.labels)
+            const subtitles = dataState.data.map(elem => { return `${t("graphs.labels.wave")} ${elem.subtitle}`})
+            graphs = separateWaves(subtitles, dataState.data, dataState.labels)
         } else if (controllers.selectedWave.length === 0) {
             graphs = joinAllWaves(dataState.data, dataState.labels)
         } else {
@@ -29,30 +31,13 @@ export default function CircularChart({ dataState, controllers }) {
         }
 
         const newState = { ...chartState }
+
         newState.chartData.data = graphs
 
         newState.chartData.layout = generateLayout(graphs, controllers.selectedWave)
 
         setChartState(newState)
-    }, [dataState, controllers])
-
-    function selectWaveHandler(values) {
-        let newState = { ...chartState }
-        newState.controllers.selectedWave = values
-
-        if (values.length === 0) {
-            newState.chartData.data = joinAllWaves(dataState.data, dataState.labels)
-        } else {
-            newState.chartData.data = joinAllWaves([dataState.data[values[0].value]], dataState.labels)
-        }
-
-        // generate the num samples labels for the new dataset
-        newState.chartData.layout = generateLayout(newState.chartData.data, values)
-
-        newState.controllers.separateWaves = false
-
-        return setChartState(newState)
-    }
+    }, [dataState, controllers, getI18n().language])
 
     function generateLayout(graphs, selectedWave) {
         // set the layout of the plot
@@ -101,36 +86,16 @@ export default function CircularChart({ dataState, controllers }) {
     }
 
     function getTitle(selectedWave) {
-        let suffix = `Comparação por ${dataState.demography}`
+        const prefix = t("graphs.nominal.titles.prefix", {demo: dataState.demography})
 
         if (selectedWave.length === 0) {
             if (controllers.separateWaves) {
-                return `${suffix} para cada vaga`
+                return `${prefix} ${t("graphs.nominal.titles.suffix1")}`
             }
-            return `${suffix} para todas as vagas`
+            return `${prefix} ${t("graphs.nominal.titles.suffix2")}`
         }
 
-        return `${suffix} para a ${selectedWave[0].label}`
-    }
-
-    function toggleSeparateWaves(ev) {
-        let newState = { ...chartState }
-        newState.controllers.separateWaves = !newState.controllers.separateWaves
-
-        let graphs = []
-            if (newState.controllers.separateWaves) {
-            graphs = separateWaves(dataState.data, dataState.labels)
-            
-        } else {
-            graphs = joinAllWaves(dataState.data, dataState.labels)
-        }
-
-        newState.chartData.layout = generateLayout(graphs, [])
-        newState.chartData.data = graphs
-
-        newState.controllers.selectedWave = []
-
-        setChartState(newState)
+        return `${prefix} ${t("graphs.nominal.titles.suffix3", { wave: selectedWave[0].label })}`
     }
 
     return (
@@ -172,7 +137,7 @@ function joinAllWaves(graphs, labels) {
 
 }
 
-function separateWaves(data, labels) {
+function separateWaves(subtitles, data, labels) {
     let graphs = []
     let row = 0
     let col = 0
@@ -181,7 +146,7 @@ function separateWaves(data, labels) {
             values: graph.values,
             labels: labels,
             type: 'pie',
-            name: graph.subtitle,
+            name: subtitles[idx],
             domain: {
                 row: row,
                 column: col
@@ -202,6 +167,7 @@ function separateWaves(data, labels) {
 
     return graphs
 }
+
 
 function createChart(data, labels, isCircular) {
     if (isCircular) {

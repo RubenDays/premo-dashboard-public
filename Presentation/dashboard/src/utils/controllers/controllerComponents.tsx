@@ -1,7 +1,7 @@
-import { Form, InputGroup, Row, Col, Container } from 'react-bootstrap';
+import { Form, InputGroup } from 'react-bootstrap';
 import SelectCheckBox from '../../components/SelectCheckBox';
 import { Option, OnChangeHandler } from '../types'
-
+import { useTranslation } from 'react-i18next'
 
 type SelectWaveControllerProps = {
     value: Array<Option>,
@@ -9,6 +9,7 @@ type SelectWaveControllerProps = {
     options: Array<Option>
 }
 export function SelectWaveController({ value, handler, options }: SelectWaveControllerProps) {
+    const { t } = useTranslation()
 
     /* select wave controller */
     return (
@@ -21,7 +22,7 @@ export function SelectWaveController({ value, handler, options }: SelectWaveCont
                 selectAll={undefined}
                 onChangeHandler={handler}
                 options={options} 
-                placeholder={'Escolher Vaga'} />
+                placeholder={t("controller-generic.wave-placeholder")} />
         </Form.Group>
     )
 }
@@ -32,6 +33,7 @@ type SeparateWavesControllerProps = {
     handler: OnChangeHandler,
 }
 export function SeparateWavesController({ isChecked, handler }: SeparateWavesControllerProps) {
+    const { t } = useTranslation()
 
     /* toggle show separated waves controller */
     return (
@@ -41,7 +43,7 @@ export function SeparateWavesController({ isChecked, handler }: SeparateWavesCon
                     type="checkbox"
                     checked={isChecked}
                     onChange={handler} 
-                    label='Separar por vagas' 
+                    label={t("controller-generic.separate-waves-cb")} 
                 />      
             </InputGroup>
         </Form.Group>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form, Alert, Container, Row, Col } from 'react-bootstrap';
 import { Navigate, useOutletContext } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import '../../utils/styles.css'
 
@@ -14,6 +15,8 @@ export default function Login() {
     const usernameRef = useRef('')
     const passwordRef = useRef('')
     const [urlState, setUrlState] = useState('')
+
+    const { t } = useTranslation()
 
     const body = `grant_type=password&username=${usernameRef.current.value}&password=${passwordRef.current.value}`
     const configObj = {
@@ -70,9 +73,9 @@ export default function Login() {
                         <Alert variant='danger' show={loginState.status === FETCH_STATUS.NOK} onClose={onCloseAlert} dismissible>
                             <Alert.Heading className='text-center'>
                                 {loginState.error === FETCH_ERRORS.BAD_REQUEST 
-                                    ? 'As credenciais são inválidas'
+                                    ? t("login-form.errors.credentials")
                                     // in case the state resets after closing alert but before message disappearing
-                                    : loginState.status !== FETCH_STATUS.NOK ? '' : 'Algo de errado ocorreu no servidor'}
+                                    : loginState.status !== FETCH_STATUS.NOK ? '' : t("login-form.errors.server")}
                             </Alert.Heading>
                         </Alert>
                     </Col>
@@ -83,18 +86,18 @@ export default function Login() {
                     <Col xs={3}>
                         <Form onSubmit={loginOnClickHandler}>                
                             <Form.Group className="mb-3" controlId="username">
-                                <Form.Label>Nome utilizador</Form.Label>
-                                <Form.Control type="text" placeholder="Inserir nome utilizador" ref={usernameRef} disabled={isDisabled()} />
+                                <Form.Label> {t("login-form.username-label")} </Form.Label>
+                                <Form.Control type="text" placeholder={t("login-form.username-placeholder")} ref={usernameRef} disabled={isDisabled()} />
                             </Form.Group>
                             <Form.Group className="mb-3" controlId="password">
-                                <Form.Label>Senha</Form.Label>
-                                <Form.Control type="password" placeholder="Inserir senha" ref={passwordRef} disabled={isDisabled()} />
+                                <Form.Label> {t("login-form.password-label")} </Form.Label>
+                                <Form.Control type="password" placeholder={t("login-form.password-placeholder")} ref={passwordRef} disabled={isDisabled()} />
                             </Form.Group>
                             <Form.Group className='centered-btn-grp'>
                                 <Button variant="generic" type="submit" disabled={isDisabled()} >
                                     { loginState.status === FETCH_STATUS.PENDING 
                                         ? <MySpinner className={'plain-div'} /> 
-                                        : 'Iniciar sessão'
+                                        : t("login-form.login-btn")
                                     }
                                 </Button>
                             </Form.Group>

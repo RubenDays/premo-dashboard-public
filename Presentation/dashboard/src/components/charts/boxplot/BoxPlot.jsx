@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
+import { useState, useEffect } from 'react';
 import { Row, Container } from 'react-bootstrap';
 import BoxPlotController from "./BoxPlotController";
 import mannwhitneyu from '../../../utils/mannwhitneyu'
 import { generateNumSamplesAnnotation, generateLayout } from '../../../utils/funcs';
-import { DEFAULT_CONFIG, getDefaultConfig, getDefaultLayout } from '../plotDefaults';
+import { getDefaultConfig, getDefaultLayout } from '../plotDefaults';
 import MyPlot from '../MyPlot';
+import { useTranslation, getI18n } from 'react-i18next';
 
 
 const kruskalTest = require('@stdlib/stats-kruskal-test');
@@ -20,6 +20,8 @@ const MAX_NUM_COLS = 3
 
 
 export default function BoxPlot({ dataState }) {
+    const { t } = useTranslation()
+
     const [chartState, setChartState] = useState({
         chartData: {
             data: [],
@@ -29,7 +31,10 @@ export default function BoxPlot({ dataState }) {
         controllers: {
             showPValues: false,
             selectedWave: [],
-            separateWaves: false
+            separateWaves: false,
+        },
+        labels: {
+            subtitles: []
         }
     })
 
@@ -41,7 +46,7 @@ export default function BoxPlot({ dataState }) {
     useEffect(() => {
         let graphs = []
         const selectedWave = chartState.controllers.selectedWave
-        if (selectedWave.length > 0) {            
+        if (selectedWave.length > 0) {
             const selectedData = selectedWave.length === 0 ? dataState.data : [dataState.data[selectedWave[0].value]]
             graphs = createJoinedWavexBps(selectedData, dataState.labels.xTicks)
         } else if (chartState.controllers.separateWaves) {
@@ -49,11 +54,13 @@ export default function BoxPlot({ dataState }) {
         } else {
             graphs = createJoinedWavexBps(dataState.data, dataState.labels.xTicks)
         }
+
+        const newState = { ...chartState }
+        newState.labels.subtitles = dataState.data.map(elem => { return `${t("graphs.labels.wave")} ${elem.subtitle}`})
         
         // set the layout of the plot
         const layout = internalGenerateLayout(graphs, selectedWave, chartState.controllers.separateWaves)
 
-        const newState = { ...chartState }
         newState.chartData.data = graphs
         newState.chartData.layout = layout
 
@@ -70,19 +77,19 @@ export default function BoxPlot({ dataState }) {
 
         setChartState(newState)
 
-    }, [dataState])
+    }, [dataState, getI18n().language])
 
     function internalGenerateLayout(graphs, selectedWave, separateWaves) {
         let layout = generateLayout(
             chartState.chartData.layout,
             graphs,
-            dataState.data,
-            dataState.labels.xText,
+            chartState.labels.subtitles,
+            '',//dataState.labels.xText,
             `${dataState.labels.paramName} ${dataState.labels.units ? dataState.labels.units : ''}`,
             MAX_NUM_COLS
         )
 
-        layout.title = generateTitle(dataState.labels, selectedWave, separateWaves)
+        layout.title = generateTitle(dataState.labels, selectedWave, separateWaves, t)
 
         const numSamplesAnnots = generateNumSamplesAnnotation(graphs.flat(), layout.grid.rows, true)
         layout.annotations = layout.annotations.concat(numSamplesAnnots)
@@ -264,7 +271,7 @@ export default function BoxPlot({ dataState }) {
                         },
                         waves: { 
                             handler: selectWaveHandler,
-                            options: dataState.data.map((elem, idx) => { return { label: elem.subtitle, value: idx }}),
+                            options: dataState.data.map((elem, idx) => { return { label: `${t("graphs.labels.wave")} ${elem.subtitle}`, value: idx }}),
                             value: chartState.controllers.selectedWave
                         }
                     }}
@@ -367,7 +374,7 @@ function createSignificanceLines(graphs, rows, hiddenBps) {
 
                 const p_display = pDisplayString(out.p)
 
-                const y_text = highVertLine + (delta * 0.03)
+                const y_text = highVertLine + (delta * 0.04)
                 currentMax = y_text
 
                 const p_annotation = {
@@ -480,17 +487,21 @@ function createJoinedWavexBps(data, xTicks) {
     return [joinedData]
 }
 
-function generateTitle(labels, selectedWave, separateWaves) {
-    let suffix = `Comparação de ${labels.analysisName ? labels.analysisName + ' | ' : ''}${labels.paramName}${labels.units ? labels.units : ''}`
+function generateTitle(labels, selectedWave, separateWaves, t) {
+    let prefix = ''
+    const analysis = labels.analysisName ? labels.analysisName + ' |' : ''
+    const units = labels.units ? ' ' + labels.units : ''
     if (labels.xText) {
-        suffix = `${suffix} por ${labels.xText}`
+        prefix = t("graphs.boxplot.titles.prefix2", { analysis: analysis, param: labels.paramName, units: units, demo: labels.xText })
+    } else {
+        prefix = t("graphs.boxplot.titles.prefix1", { analysis: analysis, param: labels.paramName, units: units })
     }
     if (selectedWave.length === 0) {
         if (separateWaves) {
-            return `${suffix} para cada vaga`
+            return `${prefix} ${t("graphs.boxplot.titles.suffix1")}`
         }
-        return `${suffix} para todas as vagas`
+        return `${prefix} ${t("graphs.boxplot.titles.suffix2")}`
     }
-
-    return `${suffix} para a ${selectedWave[0].label}`
+    
+    return `${prefix} ${t("graphs.boxplot.titles.suffix3", { wave: selectedWave[0].label })}`
 }

@@ -1,14 +1,16 @@
 import Plot from 'react-plotly.js';
 import Plotly from 'plotly.js-dist'
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ModalDownload, { DEFAULT_DL_OPT } from '../ModalDownload';
+import { useTranslation } from 'react-i18next';
 
 
 export default function({className, ...props}) {
+    const { t } = useTranslation()
 
     // Adds a button to download images in multiple formats
     props.config.modeBarButtonsToAdd = [{
-        name: 'Descarregar imagem',
+        name: t("plotly-buttons.download-img"),
         icon: Plotly.Icons.camera,
         direction: 'up',
         click: onClickDownload

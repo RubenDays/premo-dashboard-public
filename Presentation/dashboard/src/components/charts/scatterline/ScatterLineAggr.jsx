@@ -5,11 +5,13 @@ import { calculateRowsCols, generateLayout, generateNumSamplesAnnotation } from 
 import ScatterLineAggrController from './ScatterLineAggrController';
 import { DEFAULT_CONFIG, DEFAULT_LAYOUT, getDefaultConfig, getDefaultLayout } from '../plotDefaults';
 import MyPlot from '../MyPlot';
+import { useTranslation, getI18n } from 'react-i18next';
 
 
 const MAX_NUM_COLS = 3
 
 export default function ScatterLineAggr({ dataState }) {
+    const { t } = useTranslation()
 
     const [chartState, setChartState] = useState({
         chartData: {
@@ -21,18 +23,23 @@ export default function ScatterLineAggr({ dataState }) {
         controllers: {
             selectedWave: [],
             separateWaves: false
+        },
+        labels: {
+            subtitles: []
         }
     })
 
     useEffect(() => {
         const newState = { ...chartState }
 
+        newState.labels.subtitles = dataState.waves_graphs.map(elem => { return `${t("graphs.labels.wave")} ${elem.subtitle}`})
+
         let graphs = []
         const selectedWave = chartState.controllers.selectedWave
         if (selectedWave.length > 0) {
             graphs = createSingleGraph(dataState.waves_graphs[selectedWave[0].value])
         } else if (chartState.controllers.separateWaves) {
-            graphs = createSeparatedGraphs(dataState.waves_graphs)
+            graphs = createSeparatedGraphs(newState.labels.subtitles, dataState.waves_graphs)
         } else {
             graphs = createSingleGraph(dataState.all_graph)
         }
@@ -42,19 +49,19 @@ export default function ScatterLineAggr({ dataState }) {
 
         setChartState(newState)
 
-    }, [dataState])
+    }, [dataState, getI18n().language])
 
     function internalGenerateLayout(graphs, selectedWave, separateWaves) {
         let layout = generateLayout(
             chartState.chartData.layout,
             graphs,
-            dataState.waves_graphs,
-            'Tempo em dias, desde a adminssão na UCI',
-            `${dataState.label.paramName} ${dataState.label.units ? dataState.label.units : ''}`,
+            chartState.labels.subtitles,
+            t("graphs.scatter-lines-aggr.xtitle"),
+            `${dataState.label.param_name} ${dataState.label.units ? dataState.label.units : ''}`,
             MAX_NUM_COLS
         )
 
-        layout.title = generateTitle(dataState.label, selectedWave, separateWaves)
+        layout.title = generateTitle(dataState.label, selectedWave, separateWaves, t)
 
         const numSamplesAnnots = generateNumSamplesAnnotation(graphs.flat(), layout.grid.rows)
         layout.annotations = layout.annotations.concat(numSamplesAnnots)
@@ -87,7 +94,7 @@ export default function ScatterLineAggr({ dataState }) {
 
         let graphs = []
         if (newState.controllers.separateWaves) {
-            graphs = createSeparatedGraphs(dataState.waves_graphs)
+            graphs = createSeparatedGraphs(newState.labels.subtitles, dataState.waves_graphs)
         } else {
             graphs = createSingleGraph(dataState.all_graph)
         }
@@ -110,7 +117,7 @@ export default function ScatterLineAggr({ dataState }) {
                         },
                         waves: { 
                             handler: selectWaveHandler,
-                            options: dataState.waves_graphs.map((elem, idx) => { return { label: elem.subtitle, value: idx }}),
+                            options: dataState.waves_graphs.map((elem, idx) => { return { label: `${t("graphs.labels.wave")} ${elem.subtitle}`, value: idx }}),
                             value: chartState.controllers.selectedWave
                         }
                     }} 
@@ -130,14 +137,20 @@ export default function ScatterLineAggr({ dataState }) {
     )
 }
 
-function generateTitle(label, selectedWave, separateWaves) {
-    const suffix = `Evolução de ${label.analysisName} | ${label.paramName} ${label.units ? label.units : ''}`
-    if (selectedWave.length > 0) {
-        return `${suffix} para a ${selectedWave[0].label}`
-    } else if (separateWaves) {
-        return `${suffix} para cada vaga`
+function generateTitle(label, selectedWave, separateWaves, t) {
+    let prefix = ''
+    if (label.analysis_name) {
+        prefix = `${t("graphs.scatter-lines-aggr.titles.prefix2", { analysis: label.analysis_name, param: label.param_name })}${label.units ? ' ' + label.units : ''}`
     } else {
-        return `${suffix} para todas as vagas`
+        prefix = `${t("graphs.scatter-lines-aggr.titles.prefix1", { param: label.param_name })}${label.units ? ' ' + label.units : ''}`
+    }
+
+    if (selectedWave.length > 0) {
+        return `${prefix} ${t("graphs.scatter-lines-aggr.titles.suffix1", { wave: selectedWave[0].label})}`
+    } else if (separateWaves) {
+        return `${prefix} ${t("graphs.scatter-lines-aggr.titles.suffix2")}`
+    } else {
+        return `${prefix} ${t("graphs.scatter-lines-aggr.titles.suffix3")}`
     }
 }
 
@@ -152,13 +165,13 @@ function createSingleGraph(graph) {
     }]]
 }
 
-function createSeparatedGraphs(wavesGraphs) {
+function createSeparatedGraphs(subtitles, wavesGraphs) {
     let graphs = []
 
     wavesGraphs.forEach((graph, idx) => {
         graphs.push([{
             showlegend: false,
-            name: graph.subtitle,
+            name: subtitles[idx],
             type: 'scattergl',
             x: graph.x,
             y: graph.y,

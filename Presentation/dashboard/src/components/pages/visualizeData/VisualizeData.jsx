@@ -9,7 +9,7 @@ import MySpinner from '../../MySpinner';
 
 
 export default function VisualizeData({ FormToRender, graphsToRender }) {
-    const [ctx, setCtx] = useOutletContext()
+    const [ctx, setCtx, selectedLanguage] = useOutletContext()
     const [dataState, setDataState] = useState({
         data: {},
         graph_type: ''
@@ -54,7 +54,7 @@ export default function VisualizeData({ FormToRender, graphsToRender }) {
                 </Col>
                 <Col sm={9} className='plot-visualize'>
                     { fetchState.status === FETCH_STATUS.PENDING && <MySpinner /> }
-                    { fetchState.status === FETCH_STATUS.OK && graphsToRender(dataState.graph_type, dataState.data) }
+                    { fetchState.status === FETCH_STATUS.OK && graphsToRender(dataState.graph_type, dataState.data, selectedLanguage) }
                 </Col>
                 
             </Row>
