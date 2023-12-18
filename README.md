@@ -17,3 +17,15 @@ There are several .env files that are used by the applications running on contai
 All of these present dummy values, but should work. The only exception is the variable "PREMO_DB_CS", located in [this](/Logic/Api/.env) .env file. This variable represents the connection string for the relational database and must be changed.
 
 To run docker, run [this](/docker/docker-up.bat) .bat file for Windows. It will run docker-compose, create the images and run the containers.
+
+# Architecture
+The project consists of the following services, as shown in the figure:
+* __Dashboard__, which is the UI provided to the user; 
+* __Web Server__, which provides the dashboard to the user;
+* __API__, works as the logic part of a three-tier architecture. Uses the relational DB to provide the requested data to the user in the UI;
+* __SQL__, is a relational DB that holds the persistent data;
+* __NOSQL__, is a non-relational DB used by the API to send files to the ETL service;
+* __Message Queue__, used by the API to indicate the ETL service which files to process;
+* __ETL__, the ETL service. Receives the file indications from the message queue, gets these files from the non-relational, processes them and stores in the relational DB.
+
+<img src="img/arch.png" width=50%>
