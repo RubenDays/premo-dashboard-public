@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
 import i18n from '../i18n'
 
+/**
+ * Simple component that creates a listbox of language options and sets it accordingly.
+ */
 export default function LanguageSelector() {
     const [selectedLanguage, setSelectedLanguage] = useState(i18n.language)
 
