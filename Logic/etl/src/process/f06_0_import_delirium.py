@@ -27,33 +27,41 @@ class ImportDelirium:
 
     def run(self):
         self.__log_info(f'Starting execution...')
+        # retrieves the name of the file
         filename = self.__get_data_file()
 
+        # ignores if empty
         if not filename or len(filename) == 0:
             self.__log_info(f'File not found. Ignoring phase...')
 
+        # gets the file's bytes
         self.__log_info(f'File {filename} found. Processing...')
         file_bytes = self.__archived_data.read(filename[0])
 
+        # read the excel file to a dataframe
         self.__log_info(f'Reading excel to DF...')
         df_delirium = pd.read_excel(file_bytes)
 
         index = ['ID_PACIENTE', 'DATA_COLHEITA']
 
+        # select only the subset of columns that are required
         df_delirium = df_delirium[['ID_PACIENTE', 'DATA_COLHEITA', 'DELIRIUM', 'DELIRIUM_BINARIO', 'DELIRIUM_COLHEITA']]\
             .set_index(index)
 
         engine = connection.get_engine()
         self.__log_info(f'Retrieving data from DB...')
+        # retrieve data from the numeric and categorical tables (they may have different data)
         with engine.connect() as conn:
             df_data_num = pd.read_sql_query(f'select * from {global_vars.TBL_PATIENT_DATA_RESULT_NUM}', conn).set_index(index)
             df_data_cat = pd.read_sql_query(f'select * from {global_vars.TBL_PATIENT_DATA_RESULT_CAT}', conn).set_index(index)
 
         self.__log_info(f'Joining file data with db...')
+        # join the delirium data with the existing one
         new_df_num = df_data_num.join(df_delirium, on=['ID_PACIENTE', 'DATA_COLHEITA']).reset_index()
         new_df_cat = df_data_cat.join(df_delirium, on=['ID_PACIENTE', 'DATA_COLHEITA']).reset_index()
 
         self.__log_info(f'Writing results to db...')
+        # writes the resultsing df's back to the DB, in batches.
         with engine.begin() as conn:
             num_types = funcs.transform_tbl_big_ints_to_ints(new_df_num)
             funcs.write_to_db_batches(conn, new_df_num, global_vars.TBL_PATIENT_DATA_RESULT_NUM, self.__logger, types=num_types)
